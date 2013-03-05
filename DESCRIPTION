@@ -1,0 +1,17 @@
+Package: RzmqJobQueue
+Type: Package
+Title: What the package does (short line)
+Version: 1.0
+Date: 2013-03-05
+Author: Who wrote it
+Maintainer: Who to complain to <yourfault@somewhere.net>
+Description: More about what it does (maybe more than one line)
+License: What license is it under?
+Depends:
+    log4r,
+    rzmq (>= 0.6.1)
+Collate:
+    'RzmqJobQueue.R'
+    'server.R'
+    'utility.R'
+    'worker.R'

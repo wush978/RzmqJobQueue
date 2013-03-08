@@ -5,17 +5,20 @@ push_job_queue <- function(job.list) {
 
 #'@export
 push_job_processing <- function(job, hash) {
+  job$start.processing <- Sys.time()
   dict$job.processing[[hash]] <- job
 }
 
 #'@export
 push_job_finish <- function(job, hash) {
+  job$processing.time <- Sys.time() - job$start.processing
   dict$job.finish[[hash]] <- job
 }
 
 #'@export
 pop_job_queue <- function() {
   if (length(dict$job.queue) == 0) {
+    check_processing()
     job <- list(type = "empty")
     return(job)
   }
@@ -52,6 +55,26 @@ clear_job_processing <- function() {
 #'@export
 clear_job_finish <- function() {
   dict$job.finish <- list()
+}
+
+check_processing <- function() {
+  info(dict$logger, "checking process.queue...")
+  if (is.null(dict$time.sample)) {
+    dict$time.sample <- c()
+    for(job in dict$job.finish) {
+      dict$time.sample <- c(dict$time.sample, as.numeric( job$processing.time ))
+    }
+  }
+  if (length(dict$time.sample) <= 2 ) return(NULL)
+  upper.bound <- mean(time.sample) + 3*sd(time.sample)
+  for(job in dict$job.processing) {
+    consume.time <- as.numeric(Sys.time() - job$start.processing)
+    info(dict$logger, sprintf("Found a job which consuming %f time ( %f is upper bound )", consume.time, upper.bound))
+    if (consume.time > upper.bound) {
+      job <- pop_job_processing(job$hash)
+      push_job_queue(job)
+    }
+  }
 }
 
 ignore.error <- c("Error in unserialize(ans) : 'connection' must be a connection\n")

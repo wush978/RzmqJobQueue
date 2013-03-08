@@ -60,9 +60,10 @@ ignore.error <- c("Error in unserialize(ans) : 'connection' must be a connection
 wait_worker <- function(path = NULL, shared_secret = "default", terminate = TRUE) {
   if (is.null(path)) stop("\"path\" is required")
   if (is.null(dict$context)) dict$context = init.context()
-  if (is.null(dict$socket[[path]])) dict$socket[[path]] = init.socket(dict$context,"ZMQ_REP")
-      
-  stopifnot(bind.socket(dict$socket[[path]], path))
+  if (is.null(dict$socket[[path]])) {
+    dict$socket[[path]] = init.socket(dict$context,"ZMQ_REP")
+    stopifnot(bind.socket(dict$socket[[path]], path))
+  }
 #   if (terminate) {
 #     on.exit({
 #       print(Sys.time())

@@ -4,6 +4,16 @@ push_job_queue <- function(job.list) {
 }
 
 #'@export
+push_job_processing <- function(job, hash) {
+  dict$job.processing[[hash]] <- job
+}
+
+#'@export
+push_job_finish <- function(job, hash) {
+  dict$job.finish[[hash]] <- job
+}
+
+#'@export
 pop_job_queue <- function() {
   retval <- dict$job.queue[[1]]
   dict$job.queue[[1]] <- NULL
@@ -11,8 +21,32 @@ pop_job_queue <- function() {
 }
 
 #'@export
+pop_job_processing <- function(hash) {
+  retval <- dict$job.processing[[hash]]
+  dict$job.processing[[hash]] <- NULL
+  return(retval)
+}
+
+#'@export
+pop_job_finish <- function(hash) {
+  retval <- dict$job.finish[[hash]]
+  dict$job.finish[[hash]] <- NULL
+  return(retval)
+}
+
+#'@export
 clear_job_queue <- function() {
   dict$job.queue <- list()
+}
+
+#'@export
+clear_job_processing <- function() {
+  dict$job.processing <- list()
+}
+
+#'@export
+clear_job_finish <- function() {
+  dict$job.finish <- list()
 }
 
 ignore.error <- c("Error in unserialize(ans) : 'connection' must be a connection\n")
@@ -23,26 +57,43 @@ wait_worker <- function(path = NULL, shared_secret = "default") {
   context = init.context()
   socket = init.socket(context,"ZMQ_REP")
   stopifnot(bind.socket(socket, path))
-  while(length(dict$job.queue) > 0) {
+  while(length(dict$job.queue) + length(dict$job.processing) > 0) {
     worker <- receive.socket(socket)
+    info(dict$logger, sprintf("receive worker %s with request %s and shared secret %s", worker$worker.id, worker$request, worker$shared_secret))
     if (worker$shared_secret != shared_secret) {
       next
     }
-    job <- pop_job_queue()
-    if (!send.socket(socket, data=job)) {
-      push_job_queue(list(job))
-      tryCatch(
-        info(dict$logger, sprintf("send job to %s failed", worker$worker.id)), 
-        error=function(e) info(dict$logger, geterrmessage())
-        )
-      next
-    }
-    tryCatch(
-      info(dict$logger, sprintf("send job to %s successful", worker$worker.id)), 
-      error=function(e) info(dict$logger, geterrmessage())
-    )
+    switch(
+      worker$request,
+      "finish job" = finish_job(socket, worker),
+      "ask job" = ask_job(socket, worker)
+      )
   }
 }
 
+finish_job <- function(socket, worker) {
+  job.hash <- worker$job.hash 
+  job <- pop_job_processing(job.hash)
+  push_job_finish(job, job.hash)
+  info(dict$logger, sprintf("sending null response to %s", worker$worker.id)) 
+  send.null.msg(socket)
+}
+
+ask_job <- function(socket, worker) {
+  job <- pop_job_queue()
+  job.hash <- digest(c(job, Sys.time()), "md5")
+  job$hash <- job.hash
+  if (!send.socket(socket, data=job)) {
+    tryCatch({
+      push_job_queue(list(job))
+      info(dict$logger, sprintf("send job %s to %s failed", job$hash, worker$worker.id))}, 
+      error=function(e) info(dict$logger, geterrmessage())
+    )
+    return(NULL)
+  }
+  info(dict$logger, sprintf("send job %s to %s successfully", job$hash, worker$worker.id)) 
+  job$worker.id <- worker$worker.id
+  push_job_processing(job, job.hash)
+}
 
 

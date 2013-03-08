@@ -9,7 +9,8 @@ Description: More about what it does (maybe more than one line)
 License: What license is it under?
 Depends:
     log4r,
-    rzmq (>= 0.6.1)
+    rzmq (>= 0.6.1),
+    digest
 Collate:
     'RzmqJobQueue.R'
     'server.R'

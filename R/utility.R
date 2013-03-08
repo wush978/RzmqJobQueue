@@ -1,7 +1,3 @@
-# constants
-
-worker.id <- paste(Sys.info()["nodename"], Sys.getpid(), sep=":")
-
 # helpers
 get_opt_name <- function(s) {
   paste(.packageName, s, sep=".")
@@ -29,5 +25,14 @@ check_option <- function(key, default = NULL) {
   dict$logger <- create.logger(logfile=dict$logfile, level=dict$level, logformat=dict$logformat)
   cat(sprintf("log: %s \n", dict$logfile))
   dict$job.queue <- list()
+  dict$job.processing <- list()
+  dict$job.finish <- list()
+  # constants
+  
+  dict$worker.id <- paste(Sys.info()["nodename"], Sys.getpid(), sep=":")
 }
 
+#'@export
+.Last.lib <- function(libpath) {
+  
+}

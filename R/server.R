@@ -19,9 +19,10 @@ pop_job_queue <- function() {
     job <- list(type = "empty")
     return(job)
   }
-  retval <- dict$job.queue[[1]]
+  job <- dict$job.queue[[1]]
   dict$job.queue[[1]] <- NULL
-  return(retval)
+  job$type <- "normal"
+  return(job)
 }
 
 #'@export
@@ -94,9 +95,8 @@ finish_job <- function(socket, worker) {
 
 ask_job <- function(socket, worker) {
   job <- pop_job_queue()
-  if (is.null(job)) {
+  if (job$type == "empty") {
     info(dict$logger, sprintf("job queue is empty"))
-    job <- list("function" = FALSE)
     send.socket(socket, data=job)
     return(NULL)
   }

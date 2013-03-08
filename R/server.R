@@ -58,9 +58,10 @@ ignore.error <- c("Error in unserialize(ans) : 'connection' must be a connection
 #'@export
 wait_worker <- function(path = NULL, shared_secret = "default", terminate = TRUE) {
   if (is.null(path)) stop("\"path\" is required")
-  context = init.context()
-  socket = init.socket(context,"ZMQ_REP")
-  stopifnot(bind.socket(socket, path))
+  if (is.null(dict$context)) dict$context = init.context()
+  if (is.null(dict$socket[[path]])) dict$socket[[path]] = init.socket(dict$context,"ZMQ_REP")
+      
+  stopifnot(bind.socket(dict$socket[[path]], path))
 #   if (terminate) {
 #     on.exit({
 #       print(Sys.time())
@@ -68,16 +69,16 @@ wait_worker <- function(path = NULL, shared_secret = "default", terminate = TRUE
 #       })
 #   }
   while(length(dict$job.queue) + length(dict$job.processing) > 0) {
-    worker <- receive.socket(socket)
+    worker <- receive.socket(dict$socket[[path]])
     info(dict$logger, sprintf("receive worker %s with request %s and shared secret %s", worker$worker.id, worker$request, worker$shared_secret))
     if (worker$shared_secret != shared_secret) {
-      send.null.msg(socket)
+      send.null.msg(dict$socket[[path]])
       next
     }
     switch(
       worker$request,
-      "finish job" = finish_job(socket, worker),
-      "ask job" = ask_job(socket, worker)
+      "finish job" = finish_job(dict$socket[[path]], worker),
+      "ask job" = ask_job(dict$socket[[path]], worker)
       )
   }
 }
@@ -88,7 +89,7 @@ finish_job <- function(socket, worker) {
   job <- pop_job_processing(job.hash)
   push_job_finish(job, job.hash)
   info(dict$logger, sprintf("sending null response to %s", worker$worker.id)) 
-  send.null.msg(socket)
+  send.socket(socket, NULL)
 }
 
 ask_job <- function(socket, worker) {

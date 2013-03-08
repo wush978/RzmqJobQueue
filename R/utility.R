@@ -27,6 +27,8 @@ check_option <- function(key, default = NULL) {
   dict$job.queue <- list()
   dict$job.processing <- list()
   dict$job.finish <- list()
+  dict$context <- NULL
+  dict$socket <- list()
   # constants
   
   dict$worker.id <- paste(Sys.info()["nodename"], Sys.getpid(), sep=":")

@@ -8,4 +8,3 @@ for(i in 1:4) {
 
 wait_worker(path="tcp://*:12345")
 gc()
-close_worker(path="tcp://*:12345")

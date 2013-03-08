@@ -66,7 +66,7 @@ check_processing <- function() {
     }
   }
   if (length(dict$time.sample) <= 2 ) return(NULL)
-  upper.bound <- mean(time.sample) + 3*sd(time.sample)
+  upper.bound <- mean(dict$time.sample) + 3*sd(dict$time.sample)
   for(job in dict$job.processing) {
     consume.time <- as.numeric(Sys.time() - job$start.processing)
     info(dict$logger, sprintf("Found a job which consuming %f time ( %f is upper bound )", consume.time, upper.bound))

@@ -70,6 +70,11 @@ wait_worker <- function(path = NULL, shared_secret = "default", terminate = TRUE
 #       close_worker(socket, shared_secret)
 #       })
 #   }
+  stopifnot(length(dict$job.processing) == 0)
+  clear_job_finish()
+  stopifnot(length(dict$job.finish) == 0)
+  job.total.count <- length(dict$job.queue)
+  pb <- txtProgressBar(max = job.total.count)
   while(length(dict$job.queue) + length(dict$job.processing) > 0) {
     worker <- receive.socket(dict$socket[[path]])
     info(dict$logger, sprintf("receive worker %s with request %s and shared secret %s", worker$worker.id, worker$request, worker$shared_secret))
@@ -82,7 +87,12 @@ wait_worker <- function(path = NULL, shared_secret = "default", terminate = TRUE
       "finish job" = finish_job(dict$socket[[path]], worker),
       "ask job" = ask_job(dict$socket[[path]], worker)
       )
+    setTxtProgressBar(pb, length(dict$job.finish))
+    if (length(dict$job.finish) == job.total.count) {
+      cat(sprintf("There are %d jobs in job.queue and %d jobs in job.processing...\n", length(dict$job.queue), length(dict$job.processing)))
+    }
   }
+  close(pb)
 }
 
 

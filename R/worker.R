@@ -10,9 +10,17 @@ do_job <- function(path = NULL, shared_secret = "default") {
   info(dict$logger, sprintf("[id: %s] asking job from %s", dict$worker.id, path))
   job <- receive.socket(socket)
   info(dict$logger, sprintf("[id: %s] receiving job(hash:%s) from %s", dict$worker.id, job$hash, path))
-  if (!is.function(job$`function`)) {
-    info(dict$logger, sprintf("[id: %s] job queue is empty", dict$worker.id))
-    return(NULL)
+  if ("type" %in% names(job)) {
+    switch(
+      job$type,
+      "terminate" = {
+        info(dict$logger, sprintf("[id: %s] terminating", dict$worker.id))
+        stop("terminate")
+      },
+      "empty" = {
+        info(dict$logger, sprintf("[id: %s] job queue is empty", dict$worker.id))
+        return(NULL)
+      })
   }
   job$`function`(job$argv)
   info(dict$logger, sprintf("[id: %s] sending finish signal of job(hash:%s) to %s", dict$worker.id, job$hash, path))

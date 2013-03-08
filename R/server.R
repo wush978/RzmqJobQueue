@@ -15,7 +15,10 @@ push_job_finish <- function(job, hash) {
 
 #'@export
 pop_job_queue <- function() {
-  if (length(dict$job.queue) == 0) return(NULL)
+  if (length(dict$job.queue) == 0) {
+    job <- list(type = "empty")
+    return(job)
+  }
   retval <- dict$job.queue[[1]]
   dict$job.queue[[1]] <- NULL
   return(retval)
@@ -53,15 +56,22 @@ clear_job_finish <- function() {
 ignore.error <- c("Error in unserialize(ans) : 'connection' must be a connection\n")
 
 #'@export
-wait_worker <- function(path = NULL, shared_secret = "default") {
+wait_worker <- function(path = NULL, shared_secret = "default", terminate = TRUE) {
   if (is.null(path)) stop("\"path\" is required")
   context = init.context()
   socket = init.socket(context,"ZMQ_REP")
   stopifnot(bind.socket(socket, path))
+#   if (terminate) {
+#     on.exit({
+#       print(Sys.time())
+#       close_worker(socket, shared_secret)
+#       })
+#   }
   while(length(dict$job.queue) + length(dict$job.processing) > 0) {
     worker <- receive.socket(socket)
     info(dict$logger, sprintf("receive worker %s with request %s and shared secret %s", worker$worker.id, worker$request, worker$shared_secret))
     if (worker$shared_secret != shared_secret) {
+      send.null.msg(socket)
       next
     }
     switch(
@@ -71,6 +81,7 @@ wait_worker <- function(path = NULL, shared_secret = "default") {
       )
   }
 }
+
 
 finish_job <- function(socket, worker) {
   job.hash <- worker$job.hash 
@@ -103,4 +114,19 @@ ask_job <- function(socket, worker) {
   push_job_processing(job, job.hash)
 }
 
-
+# close_worker <- function(socket, shared_secret) {
+#   start.time <- Sys.time()
+#   current.time <- Sys.time()
+#   while(as.numeric(current.time - start.time) < 10) {
+#     worker <- receive.socket(socket)
+#     info(dict$logger, sprintf("receive worker %s with request %s and shared secret %s", worker$worker.id, worker$request, worker$shared_secret))
+#     if (worker$shared_secret != shared_secret) {
+#       send.null.msg(socket)
+#       next
+#     }
+#     info(dict$logger, sprintf("terminating worker %s", worker$worker.id))
+#     job.prototype <- list(type="terminate")
+#     send.socket(socket, job.prototype)
+#     current.time <- Sys.time()
+#   }
+# }

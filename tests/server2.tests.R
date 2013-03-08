@@ -5,4 +5,3 @@ for(i in 1:10) {
 }
 
 wait_worker(path="tcp://*:12345")
-readline(prompt="pause")

@@ -17,6 +17,7 @@ do_job <- function(path = NULL, shared_secret = "default") {
   job <- receive.socket(dict$socket[[path]])
   info(dict$logger, sprintf("[id: %s] receiving job(hash:%s) from %s", dict$worker.id, job$hash, path))
   if ("type" %in% names(job)) {
+    log4r:::debug(dict$logger, paste(capture.output(print(job)), collapse="\n"))
     switch(
       job$type,
       "terminate" = {

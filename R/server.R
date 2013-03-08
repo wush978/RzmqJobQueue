@@ -15,6 +15,7 @@ push_job_finish <- function(job, hash) {
 
 #'@export
 pop_job_queue <- function() {
+  if (length(dict$job.queue) == 0) return(NULL)
   retval <- dict$job.queue[[1]]
   dict$job.queue[[1]] <- NULL
   return(retval)
@@ -81,6 +82,12 @@ finish_job <- function(socket, worker) {
 
 ask_job <- function(socket, worker) {
   job <- pop_job_queue()
+  if (is.null(job)) {
+    info(dict$logger, sprintf("job queue is empty"))
+    job <- list("function" = FALSE)
+    send.socket(socket, data=job)
+    return(NULL)
+  }
   job.hash <- digest(c(job, Sys.time()), "md5")
   job$hash <- job.hash
   if (!send.socket(socket, data=job)) {

@@ -1,6 +1,6 @@
-library(RzmqJobQueue)
+# library(RzmqJobQueue)
 # base:::debug(do_job)
-do_job("tcp://localhost:12345")
+# do_job("tcp://localhost:12345")
 
 library(parallel)
 cl <- makePSOCKcluster(2)

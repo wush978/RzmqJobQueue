@@ -25,6 +25,7 @@ do_job <- function(path = NULL, shared_secret = "default") {
       },
       "empty" = {
         info(dict$logger, sprintf("[id: %s] job queue is empty", dict$worker.id))
+        Sys.sleep(10)
         return(NULL)
       })
   }

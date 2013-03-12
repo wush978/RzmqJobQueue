@@ -1,83 +1,66 @@
 #'@export
-push_job_queue <- function(job.list) {
-  dict$job.queue <- c(dict$job.queue, job.list)
+push_job_queue <- function(job) {
+  redisLPush("job.queue", job)
 }
 
 #'@export
 push_job_processing <- function(job, hash) {
-  job$start.processing <- Sys.time()
-  dict$job.processing[[hash]] <- job
+  job["start.processing"] <- Sys.time()
+  redisHSet("job.processing", job["hash"], job)
 }
 
 #'@export
 push_job_finish <- function(job, hash) {
-  job$processing.time <- Sys.time() - job$start.processing
-  dict$job.finish[[hash]] <- job
+  job["processing.time"] <- as.numeric(Sys.time() - job["start.processing"])
+  redisLPush("job.finish", job)
 }
 
 #'@export
+job_queue_len <- function() redisLLen("job.queue")
+
+#'@export
+job_processing_len <- function() redisHLen("job.processing")
+
+#'@export
+job_finish_len <- function() redisLLen("job.finish")
+
+#'@export
 pop_job_queue <- function() {
-  if (length(dict$job.queue) == 0) {
-    check_processing()
-    job <- list(type = "empty")
-    return(job)
+  if (job_queue_len() == 0) {
+    stop("TODO")
   }
-  job <- dict$job.queue[[1]]
-  dict$job.queue[[1]] <- NULL
-  job$type <- "normal"
+  job <- redisRPop("job.queue")
+  job["type"] <- "normal"
   return(job)
 }
 
 #'@export
 pop_job_processing <- function(hash) {
-  retval <- dict$job.processing[[hash]]
-  dict$job.processing[[hash]] <- NULL
+  job <- redisHGet("job.processing", field=hash)
+  redisHDel("job.processing", field=hash)
   return(retval)
 }
 
 #'@export
-pop_job_finish <- function(hash) {
-  retval <- dict$job.finish[[hash]]
-  dict$job.finish[[hash]] <- NULL
+pop_job_finish <- function() {
+  retval <- redisRPop("job.finish")
   return(retval)
 }
 
 #'@export
 clear_job_queue <- function() {
-  dict$job.queue <- list()
+  redisDelete("job.queue")
 }
 
 #'@export
 clear_job_processing <- function() {
-  dict$job.processing <- list()
+  redisDelete("job.processing")
 }
 
 #'@export
 clear_job_finish <- function() {
-  dict$job.finish <- list()
+  redisDelete("job.finish")
 }
-
-check_processing <- function() {
-  info(dict$logger, "checking process.queue...")
-  if (is.null(dict$time.sample)) {
-    dict$time.sample <- c()
-    for(job in dict$job.finish) {
-      dict$time.sample <- c(dict$time.sample, as.numeric( job$processing.time ))
-    }
-  }
-  if (length(dict$time.sample) <= 2 ) return(NULL)
-  upper.bound <- mean(dict$time.sample) + 3*sd(dict$time.sample)
-  for(job in dict$job.processing) {
-    consume.time <- as.numeric(Sys.time() - job$start.processing)
-    info(dict$logger, sprintf("Found a job which consuming %f time ( %f is upper bound )", consume.time, upper.bound))
-    if (consume.time > upper.bound) {
-      job <- pop_job_processing(job$hash)
-      push_job_queue(job)
-    }
-  }
-}
-
-ignore.error <- c("Error in unserialize(ans) : 'connection' must be a connection\n")
 
 #'@export
 wait_worker <- function(path = NULL, shared_secret = "default", terminate = TRUE) {
@@ -87,18 +70,11 @@ wait_worker <- function(path = NULL, shared_secret = "default", terminate = TRUE
     dict$socket[[path]] = init.socket(dict$context,"ZMQ_REP")
     stopifnot(bind.socket(dict$socket[[path]], path))
   }
-#   if (terminate) {
-#     on.exit({
-#       print(Sys.time())
-#       close_worker(socket, shared_secret)
-#       })
-#   }
-  stopifnot(length(dict$job.processing) == 0)
+  stopifnot(job_processing_len() == 0)
   clear_job_finish()
-  stopifnot(length(dict$job.finish) == 0)
-  job.total.count <- length(dict$job.queue)
+  job.total.count <- job_queue_len()
   pb <- txtProgressBar(max = job.total.count)
-  while(length(dict$job.queue) + length(dict$job.processing) > 0) {
+  while(job_queue_len() + job_processing_len() > 0) {
     worker <- receive.socket(dict$socket[[path]])
     info(dict$logger, sprintf("receive worker %s with request %s and shared secret %s", worker$worker.id, worker$request, worker$shared_secret))
     if (worker$shared_secret != shared_secret) {
@@ -129,39 +105,20 @@ finish_job <- function(socket, worker) {
 
 ask_job <- function(socket, worker) {
   job <- pop_job_queue()
-  if (job$type == "empty") {
+  if (job["type"] == "empty") {
     info(dict$logger, sprintf("job queue is empty"))
     send.socket(socket, data=job)
     return(NULL)
   }
-  job.hash <- digest(c(job, Sys.time()), "md5")
-  job$hash <- job.hash
   if (!send.socket(socket, data=job)) {
     tryCatch({
       push_job_queue(list(job))
-      info(dict$logger, sprintf("send job %s to %s failed", job$hash, worker$worker.id))}, 
+      info(dict$logger, sprintf("send job %s to %s failed", job["hash"], worker$worker.id))}, 
       error=function(e) info(dict$logger, geterrmessage())
     )
     return(NULL)
   }
-  info(dict$logger, sprintf("send job %s to %s successfully", job$hash, worker$worker.id)) 
-  job$worker.id <- worker$worker.id
+  info(dict$logger, sprintf("send job %s to %s successfully", job["hash"], worker$worker.id)) 
+  job["worker.id"] <- worker$worker.id
   push_job_processing(job, job.hash)
 }
-
-# close_worker <- function(socket, shared_secret) {
-#   start.time <- Sys.time()
-#   current.time <- Sys.time()
-#   while(as.numeric(current.time - start.time) < 10) {
-#     worker <- receive.socket(socket)
-#     info(dict$logger, sprintf("receive worker %s with request %s and shared secret %s", worker$worker.id, worker$request, worker$shared_secret))
-#     if (worker$shared_secret != shared_secret) {
-#       send.null.msg(socket)
-#       next
-#     }
-#     info(dict$logger, sprintf("terminating worker %s", worker$worker.id))
-#     job.prototype <- list(type="terminate")
-#     send.socket(socket, job.prototype)
-#     current.time <- Sys.time()
-#   }
-# }

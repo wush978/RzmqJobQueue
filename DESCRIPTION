@@ -14,8 +14,9 @@ Depends:
     digest,
     rredis
 Collate:
+    'job.class.R'
+    'job.methods.R'
     'RzmqJobQueue.R'
     'server.R'
     'utility.R'
     'worker.R'
-    'job.class.R'

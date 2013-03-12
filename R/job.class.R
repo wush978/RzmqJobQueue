@@ -1,4 +1,20 @@
-#'@exportClass job
+#'@section Slots: 
+#'  \describe{
+#'    \item{\code{type}:}{The type of the job. Possible value: \code{normal}, \code{empty}, and \code{terminate}}
+#'    \item{\code{fun}:}{The job will be executed by \code{do.call(fun, argv)}}
+#'    \item{\code{argv}:}{The job will be executed by \code{do.call(fun, argv)}}
+#'    \item{\code{hash}:}{The hash of the job}
+#'    \item{\code{worker.id}:}{The id of worker who do the job}
+#'    \item{\code{start.processing}:}{When the job is delivered to the worker}
+#'    \item{\code{processing.time}:}{How much time to execute the job}
+#'  }
+#'
+#' @name job
+#' @title job-class
+#' @rdname job-class
+#' @aliases job-class
+#' @author Wush Wu
+#' @exportClass job
 setClass(
   "job", 
   representation(
@@ -19,33 +35,3 @@ setClass(
     "start.processing" = NULL,
     "processing.time" = NULL
     ))
-
-#'@exportMethod initialize
-setMethod(
-  "initialize", 
-  signature(
-    .Object = "job"
-  ), definition = function(.Object, type = "normal", fun , argv = list()) {
-    .Object@type = type
-    .Object@fun = fun
-    .Object@argv = argv
-    .Object@hash = digest(list(fun = fun, argv = argv), algo="md5")
-    .Object
-  })
-
-setMethod("[<-",
-    signature(x = "job"),
-    function (x, i, j, ..., value) 
-    {
-        slot(x, i) <- value
-        x
-    }
-)
-
-setMethod("[",
-    signature(x = "job"),
-    function (x, i, j, ..., drop = TRUE) 
-    {
-        slot(x,i)
-    }
-)

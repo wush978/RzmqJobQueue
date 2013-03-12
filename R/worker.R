@@ -26,13 +26,17 @@ do_job <- function(path = NULL, shared_secret = "default") {
       },
       "empty" = {
         info(dict$logger, sprintf("[id: %s] job queue is empty", dict$worker.id))
-        Sys.sleep(10)
+        do.call(job["function"], job["argv"])
         return(NULL)
       })
   }
-  do.call(job["function"], job["argv"])
-  info(dict$logger, sprintf("[id: %s] sending finish signal of job(hash:%s) to %s", dict$worker.id, job["hash"], path))
-  send.socket(dict$socket[[path]], data=list(request="finish job", worker.id=dict$worker.id, job.hash = job["hash"], shared_secret = shared_secret))
-  res <- receive.socket(dict$socket[[path]])
-  info(dict$logger, sprintf("[id: %s] finish job(hash:%s)", dict$worker.id, job["hash"]))
+  tryCatch({
+    do.call(job["function"], job["argv"])
+    info(dict$logger, sprintf("[id: %s] sending finish signal of job(hash:%s) to %s", dict$worker.id, job["hash"], path))
+    send.socket(dict$socket[[path]], data=list(request="finish job", worker.id=dict$worker.id, job.hash = job["hash"], shared_secret = shared_secret))
+    res <- receive.socket(dict$socket[[path]])
+    info(dict$logger, sprintf("[id: %s] finish job(hash:%s)", dict$worker.id, job["hash"]))
+  }, function(e) {
+    error(dict$logger, sprintf("Job %s has following error message: %s", job["hash"], conditionCall(e)))
+  })
 }

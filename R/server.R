@@ -27,7 +27,7 @@ job_finish_len <- function() redisLLen("job.finish")
 #'@export
 pop_job_queue <- function() {
   if (job_queue_len() == 0) {
-    stop("TODO")
+    stop("Logical Error: The empty job queue should be handle in \"ask_job\"")
   }
   job <- redisRPop("job.queue")
   job["type"] <- "normal"
@@ -103,13 +103,15 @@ finish_job <- function(socket, worker) {
   send.socket(socket, NULL)
 }
 
+empty_job <- new("job", "empty", Sys.sleep, list(time = 10))
+
 ask_job <- function(socket, worker) {
-  job <- pop_job_queue()
-  if (job["type"] == "empty") {
+  if (job_queue_len() == 0) {
     info(dict$logger, sprintf("job queue is empty"))
-    send.socket(socket, data=job)
+    send.socket(socket, data=empty_job)
     return(NULL)
   }
+  job <- pop_job_queue()
   if (!send.socket(socket, data=job)) {
     tryCatch({
       push_job_queue(list(job))

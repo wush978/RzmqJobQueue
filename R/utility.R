@@ -55,18 +55,16 @@ check_option <- function(key, default = NULL) {
 #'@export
 init_server <- function(redis.host = "localhost", redis.port = 6379, redis.timeout = 2147483647L) {
   tryCatch(redisClose(), error=function(e) {
-    
+    error(dict$logger, conditionMessage(e))
   })
   options(RzmqJobQueue.is.server = TRUE)
   check_option("redis.host", "localhost")
   check_option("redis.port", 6379)
   check_option("redis.timeout", 2147483647L)
   redisConnect(host = dict$redis.host, port = dict$redis.port, timeout = dict$redis.timeout)
-    check_option("redis.db.index", 1L)
-    redisSelect(dict$redis.db.index)
-    if (pmatch(readline(prompt="Do you want to flush the redis database?(y/n)"), c("y", "n"), nomatch=2) == 1) {
-      redisFlushDB()
-    }
+  check_option("redis.db.index", 1L)
+  redisSelect(dict$redis.db.index)
+  if (pmatch(readline(prompt="Do you want to flush the redis database?(y/n)"), c("y", "n"), nomatch=2) == 1) {
+    redisFlushDB()
   }
-  
 }

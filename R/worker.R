@@ -15,11 +15,11 @@ do_job <- function(path = NULL, shared_secret = "default") {
   send.socket(dict$socket[[path]], data=list(request="ask job", worker.id=dict$worker.id, type=dict$type, shared_secret = shared_secret))
   info(dict$logger, sprintf("[id: %s] asking job from %s", dict$worker.id, path))
   job <- receive.socket(dict$socket[[path]])
-  info(dict$logger, sprintf("[id: %s] receiving job(hash:%s) from %s", dict$worker.id, job$hash, path))
+  info(dict$logger, sprintf("[id: %s] receiving job(hash:%s) from %s", dict$worker.id, job["hash"], path))
   if ("type" %in% names(job)) {
     log4r:::debug(dict$logger, paste(capture.output(print(job)), collapse="\n"))
     switch(
-      job$type,
+      job["type"],
       "terminate" = {
         info(dict$logger, sprintf("[id: %s] terminating", dict$worker.id))
         stop("terminate")
@@ -30,9 +30,9 @@ do_job <- function(path = NULL, shared_secret = "default") {
         return(NULL)
       })
   }
-  job$`function`(job$argv)
-  info(dict$logger, sprintf("[id: %s] sending finish signal of job(hash:%s) to %s", dict$worker.id, job$hash, path))
-  send.socket(dict$socket[[path]], data=list(request="finish job", worker.id=dict$worker.id, job.hash = job$hash, shared_secret = shared_secret))
+  do.call(job["function"], job["argv"])
+  info(dict$logger, sprintf("[id: %s] sending finish signal of job(hash:%s) to %s", dict$worker.id, job["hash"], path))
+  send.socket(dict$socket[[path]], data=list(request="finish job", worker.id=dict$worker.id, job.hash = job["hash"], shared_secret = shared_secret))
   res <- receive.socket(dict$socket[[path]])
-  info(dict$logger, sprintf("[id: %s] finish job(hash:%s)", dict$worker.id, job$hash))
+  info(dict$logger, sprintf("[id: %s] finish job(hash:%s)", dict$worker.id, job["hash"]))
 }

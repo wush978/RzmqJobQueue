@@ -64,7 +64,12 @@ init_server <- function(redis.host = "localhost", redis.port = 6379, redis.timeo
   redisConnect(host = dict$redis.host, port = dict$redis.port, timeout = dict$redis.timeout)
   check_option("redis.db.index", 1L)
   redisSelect(dict$redis.db.index)
-  if (pmatch(readline(prompt="Do you want to flush the redis database?(y/n)"), c("y", "n"), nomatch=2) == 1) {
+  check_option("redis.flush", FALSE)
+  if (dict$redis.flush) {
     redisFlushDB()
+  } else {
+    if (pmatch(readline(prompt="Do you want to flush the redis database?(y/n)"), c("y", "n"), nomatch=2) == 1) {
+      redisFlushDB()
+    }
   }
 }

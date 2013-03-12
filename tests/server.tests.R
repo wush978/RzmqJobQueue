@@ -1,3 +1,2 @@
-options(RzmqJobQueue.is.server = TRUE)
-
 library(RzmqJobQueue)
+init_server()

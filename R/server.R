@@ -38,13 +38,13 @@ pop_job_queue <- function() {
 pop_job_processing <- function(hash) {
   job <- redisHGet("job.processing", field=hash)
   redisHDel("job.processing", field=hash)
-  return(retval)
+  return(job)
 }
 
 #'@export
 pop_job_finish <- function() {
-  retval <- redisRPop("job.finish")
-  return(retval)
+  job <- redisRPop("job.finish")
+  return(job)
 }
 
 #'@export

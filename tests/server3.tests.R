@@ -1,5 +1,3 @@
-# test pop_job_queue when job_queue is empty
-
 library(RzmqJobQueue)
 
 for(i in 1:4) {

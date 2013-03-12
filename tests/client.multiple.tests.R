@@ -1,20 +1,10 @@
-# library(RzmqJobQueue)
-# base:::debug(do_job)
-# while(TRUE) {do_job("tcp://localhost:12345")}
-
 library(parallel)
-cl <- makePSOCKcluster(2)
-clusterEvalQ(cl, Sys.getpid())
+argv <- commandArgs(TRUE)
+argv <- as.integer(argv)
+cl <- makeForkCluster(argv[1])
+clusterExport(cl, "argv")
 clusterEvalQ(cl, {
-  temp <- list()
-  temp[[RzmqJobQueue:::get_opt_name("logfile")]] <- sprintf("/tmp/%d.log", Sys.getpid())
-  options(temp)
-  library(RzmqJobQueue)
-  # Sys.getpid()
-  # RzmqJobQueue:::dict$worker.id
-  while(TRUE) {
-    do_job("tcp://localhost:12345")
-  }
-  getOption(RzmqJobQueue:::get_opt_name("logfile"))
+  argv <- argv[2]
+  source("client.single.tests.R")
 })
-# stopCluster(cl)
+stopCluster(cl)

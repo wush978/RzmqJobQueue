@@ -32,3 +32,20 @@ setMethod(
     .Object@hash = digest(list(fun = fun, argv = argv), algo="md5")
     .Object
   })
+
+setMethod("[<-",
+    signature(x = "job"),
+    function (x, i, j, ..., value) 
+    {
+        slot(x, i) <- value
+        x
+    }
+)
+
+setMethod("[",
+    signature(x = "job"),
+    function (x, i, j, ..., drop = TRUE) 
+    {
+        slot(x,i)
+    }
+)

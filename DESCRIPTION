@@ -1,18 +1,21 @@
 Package: RzmqJobQueue
 Type: Package
-Title: What the package does (short line)
-Version: 1.0
+Title: A Job Queue
+Version: 0.1
 Date: 2013-03-05
-Author: Who wrote it
-Maintainer: Who to complain to <yourfault@somewhere.net>
-Description: More about what it does (maybe more than one line)
-License: What license is it under?
+Author: Wush Wu
+Maintainer: Wush Wu <wush978@gmail.com>
+Description: A Job Queue based on Rzmq
+License: GPL
 Depends:
+    methods,
     log4r,
     rzmq (>= 0.6.1),
-    digest
+    digest,
+    rredis
 Collate:
     'RzmqJobQueue.R'
     'server.R'
     'utility.R'
     'worker.R'
+    'job.class.R'

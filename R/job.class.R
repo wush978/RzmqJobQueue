@@ -1,4 +1,4 @@
-#'@exportClass
+#'@exportClass job
 setClass(
   "job", 
   representation(
@@ -20,7 +20,7 @@ setClass(
     "processing.time" = NULL
     ))
 
-#'@exportMethod
+#'@exportMethod initialize
 setMethod(
   "initialize", 
   signature(
@@ -32,4 +32,3 @@ setMethod(
     .Object@hash = digest(list(fun = fun, argv = argv), algo="md5")
     .Object
   })
-

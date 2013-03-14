@@ -1,16 +1,19 @@
 #'@export
 push_job_queue <- function(job) {
+  stopifnot(class(job) == "job")
   redisLPush("job.queue", job)
 }
 
 #'@export
 push_job_processing <- function(job, hash) {
+  stopifnot(class(job) == "job")
   job["start.processing"] <- Sys.time()
   redisHSet("job.processing", job["hash"], job)
 }
 
 #'@export
 push_job_finish <- function(job, hash) {
+  stopifnot(class(job) == "job")
   job["processing.time"] <- as.numeric(Sys.time() - job["start.processing"])
   redisLPush("job.finish", job)
 }
@@ -30,6 +33,7 @@ pop_job_queue <- function() {
     stop("Logical Error: The empty job queue should be handle in \"ask_job\"")
   }
   job <- redisRPop("job.queue")
+  stopifnot(class(job) == "job")
   job["type"] <- "normal"
   return(job)
 }
@@ -37,6 +41,7 @@ pop_job_queue <- function() {
 #'@export
 pop_job_processing <- function(hash) {
   job <- redisHGet("job.processing", field=hash)
+  stopifnot(class(job) == "job")
   redisHDel("job.processing", field=hash)
   return(job)
 }
@@ -44,6 +49,7 @@ pop_job_processing <- function(hash) {
 #'@export
 pop_job_finish <- function() {
   job <- redisRPop("job.finish")
+  stopifnot(class(job) == "job")
   return(job)
 }
 

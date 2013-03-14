@@ -15,15 +15,6 @@
 
   \item{RzmqJobQueue.logformat}{the format of logger. See
   \code{\link{create.logger}} for details.}
-
-  \item{RzmqJobQueue.redis.host}{See
-  \code{\link{redisConnect}} for details.}
-
-  \item{RzmqJobQueue.redis.port}{See
-  \code{\link{redisConnect}} for details.}
-
-  \item{RzmqJobQueue.redis.timeout}{See
-  \code{\link{redisConnect}} for details.}
 }
 \description{
   Use following key of \code{\link{options}} to configure

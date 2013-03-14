@@ -26,9 +26,6 @@ check_option <- function(key, default = NULL) {
 #'@param RzmqJobQueue.logfile the path of logs. See \code{\link{create.logger}} for details.
 #'@param RzmqJobQueue.level the level of logger. See \code{\link{create.logger}} for details.
 #'@param RzmqJobQueue.logformat the format of logger. See \code{\link{create.logger}} for details.
-#'@param RzmqJobQueue.redis.host See \code{\link{redisConnect}} for details.
-#'@param RzmqJobQueue.redis.port See \code{\link{redisConnect}} for details.
-#'@param RzmqJobQueue.redis.timeout See \code{\link{redisConnect}} for details.
 #'@examples
 #'options(RzmqJobQueue.logfile = "/tmp/test.log")
 #'library(RzmqJobQueue)
@@ -53,23 +50,14 @@ check_option <- function(key, default = NULL) {
 }
 
 #'@export
-init_server <- function(redis.host = "localhost", redis.port = 6379, redis.timeout = 2147483647L) {
+init_server <- function(redis.host = "localhost", redis.port = 6379, redis.timeout = 2147483647L, redis.db.index = 1L, redis.flush=FALSE) {
   tryCatch(redisClose(), error=function(e) {
     error(dict$logger, conditionMessage(e))
   })
   options(RzmqJobQueue.is.server = TRUE)
-  check_option("redis.host", "localhost")
-  check_option("redis.port", 6379)
-  check_option("redis.timeout", 2147483647L)
-  redisConnect(host = dict$redis.host, port = dict$redis.port, timeout = dict$redis.timeout)
-  check_option("redis.db.index", 1L)
-  redisSelect(dict$redis.db.index)
-  check_option("redis.flush", FALSE)
-  if (dict$redis.flush) {
+  redisConnect(host = redis.host, port = redis.port, timeout = redis.timeout)
+  redisSelect(redis.db.index)
+  if (redis.flush) {
     redisFlushDB()
-  } else {
-    if (pmatch(readline(prompt="Do you want to flush the redis database?(y/n)"), c("y", "n"), nomatch=2) == 1) {
-      redisFlushDB()
-    }
   }
 }

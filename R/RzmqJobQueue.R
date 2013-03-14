@@ -8,6 +8,7 @@ get_opt_name <- function(s) {
 
 dict <- new.env()
 
+#'@useDynLib RzmqJobQueue
 .onLoad <- function(libname, pkgname) {
   dict$type <- "init"
 }

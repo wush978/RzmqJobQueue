@@ -12,7 +12,9 @@ Depends:
     log4r,
     rzmq (>= 0.6.1),
     digest,
-    rredis
+    rredis,
+    Rcpp
+LinkingTo: Rcpp
 Collate:
     'job.class.R'
     'job.methods.R'

@@ -10,3 +10,8 @@ stopifnot(all.equal(output, "TWFuIGlzIGRpc3Rpbmd1aXNoZWQsIG5vdCBvbmx5IGJ5IGhpcyB
 
 all.equal(input.raw, .Call("base64__decode", output))
 
+
+library(Rbridgewell)
+load(system.file("bug.data.Rdata", package="RzmqJobQueue"))
+ls()
+.Call("base64__encode", value.raw)

@@ -1,25 +1,25 @@
 redisLPush <- function(key, value) {
   value.raw <- serialize(value, connection=NULL)
-  value.base64 <- .Call("base64_encode", value.raw)
+  value.base64 <- .Call("base64__encode", value.raw)
   rredis:::redisLPush(key, value.base64)
 }
 
 redisRPop <- function(key) {
   value.base64 <- rredis:::redisRPop(key)
-  value.raw <- .Call("base64_decode", value.base64)
+  value.raw <- .Call("base64__decode", value.base64)
   value <- unserialize(value.raw)
   return(value)
 }
 
 redisHSet <- function(key, field, value, NX=FALSE) {
   value.raw <- serialize(value, connection=NULL)
-  value.base64 <- .Call("base64_encode", value.raw)
+  value.base64 <- .Call("base64__encode", value.raw)
   rredis:::redisHSet(key, field, value.base64, NX)
 }
 
 redisHGet <- function(key, field) {
   value.base64 <- rredis:::redisHGet(key, field)
-  value.raw <- .Call("base64_decode", value.base64)
+  value.raw <- .Call("base64__decode", value.base64)
   value <- unserialize(value.raw)
   return(value)
 }

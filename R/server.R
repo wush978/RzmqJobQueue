@@ -1,3 +1,78 @@
+#'@export
+query_job_queue <- function() {
+  value.base64 <- rredis:::redisLRange("job.queue", 0, rredis:::redisLLen("job.queue") - 1)
+  value <- tryCatch({ 
+    sapply(value.base64, function(base64) {
+      unserialize(.Call("base64__decode", base64), refhook=FALSE)
+    })},
+                    error = function(e) {
+                      greg.result <- gregexpr("^\\.onLoad failed in loadNamespace\\(\\) for \'(?<pkgname>\\w+)\',.*", text=conditionMessage(e), perl=TRUE)[[1]]
+                      if (greg.result == -1) stop(conditionMessage(e))
+                      pkgname <- substr(conditionMessage(e), attr(greg.result, "capture.start"), attr(greg.result, "capture.start") + attr(greg.result, "capture.length") - 1)
+                      library(pkgname, character.only=TRUE)
+                      value <- sapply(value.base64, function(base64) {
+                        unserialize(.Call("base64__decode", base64), refhook=FALSE)
+                      })
+                      return(value)
+                    })
+  data.frame(hash = sapply(value, function(a) a["hash"], simplify=TRUE))
+}
+
+#'@export
+query_job_processing <- function() {
+  value.base64 <- rredis:::redisHGetAll("job.processing")
+  value <- tryCatch({ 
+    sapply(value.base64, function(base64) {
+      unserialize(.Call("base64__decode", base64), refhook=FALSE)
+    })},
+    error = function(e) {
+      greg.result <- gregexpr("^\\.onLoad failed in loadNamespace\\(\\) for \'(?<pkgname>\\w+)\',.*", text=conditionMessage(e), perl=TRUE)[[1]]
+      if (greg.result == -1) stop(conditionMessage(e))
+      pkgname <- substr(conditionMessage(e), attr(greg.result, "capture.start"), attr(greg.result, "capture.start") + attr(greg.result, "capture.length") - 1)
+      library(pkgname, character.only=TRUE)
+      value <- sapply(value.base64, function(base64) {
+        unserialize(.Call("base64__decode", base64), refhook=FALSE)
+      })
+      return(value)
+    })
+  get_column <- function(name) {
+    force(name)
+    return(sapply(value, function(a) a[name]))
+  }
+  retval <- data.frame(row.names = get_column("hash"), worker.id = get_column("worker.id"), start.processing = get_column("start.processing"))
+  class(retval$start.processing) <- c("POSIXct", "POSIXt")
+  retval$start.processing <- format(retval$start.processing)
+  return(retval)
+}
+
+#'@export
+query_job_finish <- function() {
+  value.base64 <- rredis:::redisLRange("job.finish", 0, rredis:::redisLLen("job.finish") - 1)
+  value <- tryCatch({ 
+    sapply(value.base64, function(base64) {
+      unserialize(.Call("base64__decode", base64), refhook=FALSE)
+    })},
+                    error = function(e) {
+                      greg.result <- gregexpr("^\\.onLoad failed in loadNamespace\\(\\) for \'(?<pkgname>\\w+)\',.*", text=conditionMessage(e), perl=TRUE)[[1]]
+                      if (greg.result == -1) stop(conditionMessage(e))
+                      pkgname <- substr(conditionMessage(e), attr(greg.result, "capture.start"), attr(greg.result, "capture.start") + attr(greg.result, "capture.length") - 1)
+                      library(pkgname, character.only=TRUE)
+                      value <- sapply(value.base64, function(base64) {
+                        unserialize(.Call("base64__decode", base64), refhook=FALSE)
+                      })
+                      return(value)
+                    })
+  get_column <- function(name) {
+    force(name)
+    return(sapply(value, function(a) a[name]))
+  }
+  retval <- data.frame(row.names = get_column("hash"), worker.id = get_column("worker.id"), start.processing = get_column("start.processing"), processing.time = get_column("processing.time"))
+  class(retval$start.processing) <- c("POSIXct", "POSIXt")
+  retval$start.processing <- format(retval$start.processing)
+  return(retval)
+}
+
+
 redisLPush <- function(key, value) {
   value.raw <- serialize(value, connection=NULL)
   value.base64 <- .Call("base64__encode", value.raw)

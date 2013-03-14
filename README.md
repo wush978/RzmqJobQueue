@@ -26,7 +26,7 @@ I only use it under *Ubuntu*.
 
 ## Push *Job*s to Job Queue
 
-```r add job.queue
+```
 library(RzmqJobQueue)
 init_server(redis.flush=TRUE) # WARNING: it will FLUSH the redis server with index 1
 push_job_queue( new("job", fun=base:::mean, argv=list(x = rnorm(100))) )
@@ -34,7 +34,7 @@ push_job_queue( new("job", fun=base:::mean, argv=list(x = rnorm(100))) )
 
 ## Start a Listener
 
-```r listener
+```
 #! /usr/bin/Rscript
 library(RzmqJobQueue)
 init_server(redis.flush=FALSE)
@@ -43,7 +43,7 @@ wait_worker(path="tcp://*:12345")
 
 ## Spawn Several Workers
 
-```r workers
+```
 #! /usr/bin/Rscript
 library(RzmqJobQueue)
 do_job("tcp://localhost:12345")
@@ -51,7 +51,7 @@ do_job("tcp://localhost:12345")
 
 ## Monitor
 
-```r shiny_app
+```
 library(shiny)
 runApp(system.file("shiny", package="RzmqJobQueue"))
 ```

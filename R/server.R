@@ -186,7 +186,7 @@ wait_worker <- function(path = NULL, shared_secret = "default", terminate = TRUE
   if (is_start) stopifnot(job_processing_len() == 0)
   if (is_clear_job_finish) clear_job_finish()
   job.total.count <- job_queue_len()
-  pb <- txtProgressBar(max = job.total.count)
+#   pb <- txtProgressBar(max = job.total.count)
   while(job_queue_len() + job_processing_len() > 0) {
     worker <- receive.socket(dict$socket[[path]])
     info(dict$logger, sprintf("receive worker %s with request %s and shared secret %s", worker$worker.id, worker$request, worker$shared_secret))
@@ -200,16 +200,25 @@ wait_worker <- function(path = NULL, shared_secret = "default", terminate = TRUE
       "finish job" = finish_job(dict$socket[[path]], worker),
       "ask job" = ask_job(dict$socket[[path]], worker)
       )
-    setTxtProgressBar(pb, length(dict$job.finish))
+#     setTxtProgressBar(pb, length(dict$job.finish))
     if (length(dict$job.finish) == job.total.count) {
       cat(sprintf("There are %d jobs in job.queue and %d jobs in job.processing...\n", length(dict$job.queue), length(dict$job.processing)))
     }
   }
-  close(pb)
+#   close(pb)
+}
+
+#'@export
+set_init_job <- function(job) {
+  if (class(job) != "job") stop("non-job object")
+  redisSet("job.init", job)
 }
 
 init_job <- function(socket, worker) {
-  job <- 
+  job <- redisGet("job.init")
+  if (is.null(job)) stop("init script has not been set yet!")
+  info(dict$logger, sprintf("sending init script to %s", worker$worker.id)) 
+  send.socket(socket, job)
 }
 
 finish_job <- function(socket, worker) {

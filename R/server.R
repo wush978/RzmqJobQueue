@@ -171,15 +171,15 @@ clear_job_finish <- function() {
 }
 
 #'@export
-wait_worker <- function(path = NULL, shared_secret = "default", terminate = TRUE) {
+wait_worker <- function(path = NULL, shared_secret = "default", terminate = TRUE, is_start = FALSE, is_clear_job_finish = FALSE) {
   if (is.null(path)) stop("\"path\" is required")
   if (is.null(dict$context)) dict$context = init.context()
   if (is.null(dict$socket[[path]])) {
     dict$socket[[path]] = init.socket(dict$context,"ZMQ_REP")
     stopifnot(bind.socket(dict$socket[[path]], path))
   }
-  stopifnot(job_processing_len() == 0)
-  clear_job_finish()
+  if (is_start) stopifnot(job_processing_len() == 0)
+  if (is_clear_job_finish) clear_job_finish()
   job.total.count <- job_queue_len()
   pb <- txtProgressBar(max = job.total.count)
   while(job_queue_len() + job_processing_len() > 0) {

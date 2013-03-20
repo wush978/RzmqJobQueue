@@ -72,31 +72,36 @@ query_job_finish <- function() {
   return(retval)
 }
 
+encode_base64 <- function(value) {
+  .Call("base64__encode", serialize(value, connection=NULL))
+}
+
+decode_base64 <- function(value.base64) {
+  unserialize(.Call("base64__decode", value.base64))
+}
+
+redisSet <- function(key, value) {
+  rredis:::redisSet(key, encode_base64(value))
+}
+
+redisGet <- function(key) {
+  decode_base64(rredis:::redisGet(key))
+}
 
 redisLPush <- function(key, value) {
-  value.raw <- serialize(value, connection=NULL)
-  value.base64 <- .Call("base64__encode", value.raw)
-  rredis:::redisLPush(key, value.base64)
+  rredis:::redisLPush(key, encode_base64(value))
 }
 
 redisRPop <- function(key) {
-  value.base64 <- rredis:::redisRPop(key)
-  value.raw <- .Call("base64__decode", value.base64)
-  value <- unserialize(value.raw)
-  return(value)
+  decode_base64(rredis:::redisRPop(key))
 }
 
 redisHSet <- function(key, field, value, NX=FALSE) {
-  value.raw <- serialize(value, connection=NULL)
-  value.base64 <- .Call("base64__encode", value.raw)
-  rredis:::redisHSet(key, field, value.base64, NX)
+  rredis:::redisHSet(key, field, encode_base64(value), NX)
 }
 
 redisHGet <- function(key, field) {
-  value.base64 <- rredis:::redisHGet(key, field)
-  value.raw <- .Call("base64__decode", value.base64)
-  value <- unserialize(value.raw)
-  return(value)
+  decode_base64(rredis:::redisHGet(key, field))
 }
 
 
@@ -191,6 +196,7 @@ wait_worker <- function(path = NULL, shared_secret = "default", terminate = TRUE
     }
     switch(
       worker$request,
+      "init" = init_job(dict$socket[[path]], worker),
       "finish job" = finish_job(dict$socket[[path]], worker),
       "ask job" = ask_job(dict$socket[[path]], worker)
       )
@@ -202,6 +208,9 @@ wait_worker <- function(path = NULL, shared_secret = "default", terminate = TRUE
   close(pb)
 }
 
+init_job <- function(socket, worker) {
+  job <- 
+}
 
 finish_job <- function(socket, worker) {
   job.hash <- worker$job.hash 

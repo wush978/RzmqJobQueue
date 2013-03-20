@@ -1,8 +1,11 @@
 library(shiny)
 library(RzmqJobQueue)
 
-shinyUI(bootstrapPage(
+shinyUI(pageWithSidebar(
   headerPanel("Status"),
+  sidebarPanel(
+    numericInput("redis.index", "Index of Redis Server", 1L)
+    ),
   mainPanel(
     tabsetPanel(
       tabPanel("Job Queue", value="job.queue", tableOutput("job.queue")),

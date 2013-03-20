@@ -2,15 +2,23 @@ library(shiny)
 
 shinyServer(function(input, output) {
   library(RzmqJobQueue)
-  init_server(redis.flush=FALSE)
   output$job.queue <- renderTable(reactive({
-    query_job_queue()
+    init_server(redis.flush=FALSE, redis.db.index=input$redis.index)
+    result <- query_job_queue()
+    redisClose()
+    result
   })())
   output$job.processing <- renderTable(reactive({
-    query_job_processing()
+    init_server(redis.flush=FALSE, redis.db.index=input$redis.index)
+    result <- query_job_processing()
+    redisClose()
+    result
   })())
   output$job.finish <- renderTable(reactive({
-    query_job_finish()
+    init_server(redis.flush=FALSE, redis.db.index=input$redis.index)
+    result <- query_job_finish()
+    redisClose()
+    result
   })())
   
 })

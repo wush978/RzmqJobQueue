@@ -1,3 +1,9 @@
+#'@title query_job_queue
+#'
+#'Dump the jobs in the job queue for monitoring.
+#'This function won't affect the job queue in redis server.
+#'
+#'@return data.frame includes the information of jobs. The 'title' attribute is used in shiny app
 #'@export
 query_job_queue <- function() {
   value.base64 <- rredis:::redisLRange("job.queue", 0, rredis:::redisLLen("job.queue") - 1)
@@ -25,6 +31,12 @@ query_job_queue <- function() {
   return(retval)
 }
 
+#'@title query_job_processing
+#'
+#'Dump the jobs which is under executing for monitoring.
+#'This function won't affect the job queue in redis server.
+#'
+#'@return data.frame includes the information of jobs. The 'title' attribute is used in shiny app
 #'@export
 query_job_processing <- function() {
   value.base64 <- rredis:::redisHGetAll("job.processing")
@@ -58,6 +70,12 @@ query_job_processing <- function() {
   return(retval)
 }
 
+#'@title query_job_finish
+#'
+#'Dump the jobs which is finished
+#'This function won't affect the job queue in redis server.
+#'
+#'@return data.frame includes the information of jobs. The 'title' attribute is used in shiny app
 #'@export
 query_job_finish <- function() {
   value.base64 <- rredis:::redisLRange("job.finish", 0, rredis:::redisLLen("job.finish") - 1)
@@ -123,13 +141,22 @@ redisHGet <- function(key, field) {
   decode_base64(rredis:::redisHGet(key, field))
 }
 
-
+#'@title push_job_queue
+#'
+#'Add job to the job queue in redis
+#'
+#'@param job an instance of 'job'
 #'@export
 push_job_queue <- function(job) {
   stopifnot(class(job) == "job")
   redisLPush("job.queue", job)
 }
 
+#'@title push_job_processing
+#'
+#'Add job to hash values in redis
+#'
+#'@param job an instance of 'job'
 #'@export
 push_job_processing <- function(job, hash) {
   stopifnot(class(job) == "job")
@@ -137,6 +164,11 @@ push_job_processing <- function(job, hash) {
   redisHSet("job.processing", job["hash"], job)
 }
 
+#'@title push_job_finish
+#'
+#'Add job to the list of finished job in redis
+#'
+#'@param job an instance of 'job'
 #'@export
 push_job_finish <- function(job, hash) {
   stopifnot(class(job) == "job")
@@ -144,15 +176,26 @@ push_job_finish <- function(job, hash) {
   redisLPush("job.finish", job)
 }
 
+#'@title job_queue_len
+#'@return int the number of jobs in job queue
 #'@export
 job_queue_len <- function() redisLLen("job.queue")
 
+#'@title job_processing_len
+#'@return int the number of jobs under execution
 #'@export
 job_processing_len <- function() redisHLen("job.processing")
 
+#'@title job_finish_len
+#'@return int the number of finished jobs
 #'@export
 job_finish_len <- function() redisLLen("job.finish")
 
+#'@title pop_job_queue
+#'
+#'Return the first job in the queue
+#'
+#'@return an instance of 'job'
 #'@export
 pop_job_queue <- function() {
   if (job_queue_len() == 0) {
@@ -164,6 +207,12 @@ pop_job_queue <- function() {
   return(job)
 }
 
+#'@title pop_job_processing
+#'
+#'Return the job in the hash values in redis according to the parameter \code{hash}
+#'
+#'@param hash the hash value of the job
+#'@return an instance of 'job'
 #'@export
 pop_job_processing <- function(hash) {
   job <- redisHGet("job.processing", field=hash)
@@ -172,6 +221,11 @@ pop_job_processing <- function(hash) {
   return(job)
 }
 
+#'@title pop_job_finish
+#'
+#'Return the first job in the list of finished job
+#'
+#'@return an instance of 'job'
 #'@export
 pop_job_finish <- function() {
   job <- redisRPop("job.finish")
@@ -179,21 +233,42 @@ pop_job_finish <- function() {
   return(job)
 }
 
+#'@title clear_job_queue
+#'
+#'Clear the job queue
+#'
 #'@export
 clear_job_queue <- function() {
   redisDelete("job.queue")
 }
 
+#'@title clear_job_processing
+#'
+#'Clear the hash values in redis of jobs under execution 
+#'
 #'@export
 clear_job_processing <- function() {
   redisDelete("job.processing")
 }
 
+#'@title clear_job_finish
+#'
+#'Clear the list of finished job
+#'
 #'@export
 clear_job_finish <- function() {
   redisDelete("job.finish")
 }
 
+#'@title wait_worker
+#'
+#'Listen to a specific port for workers and assign the first job in job queue if the worker asks a job.
+#'
+#'@param path string, ex: "tcp://*:12345"
+#'@param shared_secret string, a secret shares with workers
+#'@param terminate unused
+#'@param is_start logical, check if the hash value of job under execution is empty or not
+#'@param is_clear_job_finish logical, whether clear the list of finished job or not 
 #'@export
 wait_worker <- function(path = NULL, shared_secret = "default", terminate = TRUE, is_start = FALSE, is_clear_job_finish = FALSE) {
   if (is.null(path)) stop("\"path\" is required")
@@ -227,6 +302,11 @@ wait_worker <- function(path = NULL, shared_secret = "default", terminate = TRUE
 #   close(pb)
 }
 
+#'set_init_job
+#'
+#'Ask the worker do the job when it asking how to initialize
+#'
+#'@param job an instance of 'job'
 #'@export
 set_init_job <- function(job) {
   if (class(job) != "job") stop("non-job object")

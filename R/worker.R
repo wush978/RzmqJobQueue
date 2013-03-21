@@ -15,6 +15,12 @@ send_server <- function(path, shared_secret, request) {
   send.socket(dict$socket[[path]], data=list(request=request, worker.id=dict$worker.id, type=dict$type, shared_secret = shared_secret))
 }
 
+#'@title init_worker
+#'
+#'Ask the server how to initialize
+#'
+#'@param path the path of server, ex: "tcp://localhost:12345"
+#'@param shared_secret a secrete share with the server. 
 #'@export
 init_worker <- function(path = NULL, shared_secret = "default") {
   init_connection(path)
@@ -50,7 +56,12 @@ init_worker <- function(path = NULL, shared_secret = "default") {
 }
 
 #'@title do_job
+#'
+#'Ask a job from the server, execute it, and report.
+#'To merge the result of the job, the user should write its own logic in \code{job["fun"]}
+#'
 #'@param path example: "tcp://localhost:5555"
+#'@param shared_secret a secrete share with the server. 
 #'@export
 do_job <- function(path = NULL, shared_secret = "default") {
   init_connection(path)

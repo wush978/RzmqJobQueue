@@ -49,6 +49,15 @@ check_option <- function(key, default = NULL) {
 .Last.lib <- function(libpath) {
 }
 
+#'@title init_server
+#'
+#'Connect to the redis server.
+#'
+#'@param redis.host string, the location of redis.host
+#'@param redis.port int, the port
+#'@param redis.timeout int, time(second) of timeout.
+#'@param redis.db.index int, the index of redis server used to maintain the job queue
+#'@param redis.flush logical, whether clear the index ofredis server or not
 #'@export
 init_server <- function(redis.host = "localhost", redis.port = 6379, redis.timeout = 2147483647L, redis.db.index = 1L, redis.flush=FALSE) {
   tryCatch(redisClose(), error=function(e) {

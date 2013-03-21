@@ -14,6 +14,11 @@
 #' @rdname job-class
 #' @aliases job-class
 #' @author Wush Wu
+#' @examples
+#' ## Not run
+#' job <- new("job", fun = base:::mean, argv = list(x = rnorm(10)))
+#' push_job_queue(job)
+#' ## END(**Not run**)
 #' @exportClass job
 setClass(
   "job", 

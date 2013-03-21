@@ -15,7 +15,14 @@ query_job_queue <- function() {
                       })
                       return(value)
                     })
-  data.frame(hash = sapply(value, function(a) a["hash"], simplify=TRUE))
+  value.argv <- sapply(value, function(a) {
+    argv <- a["argv"]
+    retval <- capture.output(dump("argv", ""))
+    return(paste(retval, collapse=""))
+  })
+  retval <- data.frame(hash = sapply(value, function(a) a["hash"], simplify=TRUE))
+  attr(retval, "title") <- value.argv
+  return(retval)
 }
 
 #'@export
@@ -39,9 +46,15 @@ query_job_processing <- function() {
     force(name)
     return(sapply(value, function(a) a[name]))
   }
+  value.argv <- sapply(value, function(a) {
+    argv <- a["argv"]
+    retval <- capture.output(dump("argv", ""))
+    return(paste(retval, collapse=""))
+    })
   retval <- data.frame(row.names = get_column("hash"), worker.id = get_column("worker.id"), start.processing = get_column("start.processing"))
   class(retval$start.processing) <- c("POSIXct", "POSIXt")
   retval$start.processing <- format(retval$start.processing)
+  attr(retval, "title") <- value.argv
   return(retval)
 }
 
@@ -66,9 +79,15 @@ query_job_finish <- function() {
     force(name)
     return(sapply(value, function(a) a[name]))
   }
+  value.argv <- sapply(value, function(a) {
+    argv <- a["argv"]
+    retval <- capture.output(dump("argv", ""))
+    return(paste(retval, collapse=""))
+  })
   retval <- data.frame(row.names = get_column("hash"), worker.id = get_column("worker.id"), start.processing = get_column("start.processing"), processing.time = get_column("processing.time"))
   class(retval$start.processing) <- c("POSIXct", "POSIXt")
   retval$start.processing <- format(retval$start.processing)
+  attr(retval, "title") <- value.argv
   return(retval)
 }
 

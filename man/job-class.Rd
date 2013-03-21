@@ -18,6 +18,12 @@
   \item{\code{processing.time}:}{How much time to execute
   the job} }
 }
+\examples{
+## Not run
+job <- new("job", fun = base:::mean, argv = list(x = rnorm(10)))
+push_job_queue(job)
+## END(**Not run**)
+}
 \author{
   Wush Wu
 }

@@ -23,10 +23,16 @@ gen_job_set <- function(fun = NULL, argv.enumerate = list(), argv.template = lis
 }
 
 #'@export
-commit_job <- function(job.list) {
+commit_job <- function(job.list, is.processbar = TRUE) {
   stopifnot(is.list(job.list))
   stopifnot(all(sapply(job.list, class) == "job"))
+  if (is.processbar) {
+    i <- 0
+    pb <- txtProgressBar(max = length(job.list))
+  }
   for(job in job.list) {
     push_job_queue(job)
+    if (is.processbar) setTxtProgressBar(pb, i <- i + 1)
   }
+  if (is.processbar) close(pb)
 }

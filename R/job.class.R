@@ -7,6 +7,7 @@
 #'    \item{\code{worker.id}:}{The id of worker who do the job}
 #'    \item{\code{start.processing}:}{When the job is delivered to the worker}
 #'    \item{\code{processing.time}:}{How much time to execute the job}
+#'    \item{\code{result}:}{The returned object from \code{fun}}
 #'  }
 #'
 #' @name job
@@ -29,7 +30,8 @@ setClass(
     "hash" = "character",
     "worker.id" = "character",
     "start.processing" = "POSIXt",
-    "processing.time" = "numeric"
+    "processing.time" = "numeric",
+    "result" = "list"
   ), 
   prototype(
     "type" = "normal",
@@ -38,5 +40,6 @@ setClass(
     "hash" = "",
     "worker.id" = "",
     "start.processing" = NULL,
-    "processing.time" = NULL
+    "processing.time" = NULL,
+    "result" = list()
     ))

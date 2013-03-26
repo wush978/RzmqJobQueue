@@ -270,10 +270,11 @@ wait_worker <- function(path = NULL, shared_secret = "default", terminate = TRUE
   ping.stdout <- tempfile()
   system2("Rscript", args = c(system.file("ping.R", package="RzmqJobQueue"), sub(pattern="*", replacement="localhost", x=path, fixed=TRUE), shared_secret, as.character(ping.time.gap)), wait=FALSE, stdout = ping.stdout)
   while(!file.exists(ping.stdout)) next
+  while(file.info(ping.stdout)$size == 0) next
   ping.pid <- as.integer(readLines(ping.stdout))
-  cat(sprintf("ping.pid: %d \n", ping.pid))
+  stopifnot(length(ping.pid) > 0)
+  stopifnot(ping.pid > 0)
   on.exit(pskill(ping.pid), add=TRUE)
-  browser()
   job.total.count <- job_queue_len()
 #   pb <- txtProgressBar(max = job.total.count)
   while(job_queue_len() + job_processing_len() > 0) {
@@ -368,6 +369,6 @@ ask_job <- function(socket, worker, terminate) {
 }
 
 pong <- function(socket, worker) {
-  log4r:::debug(dict$logger, "pong")
+  print("ping pong")
   send.socket(socket, data="pong")
 }

@@ -259,6 +259,7 @@ clear_job_finish <- function() {
 #'@param is_clear_job_finish logical, whether clear the list of finished job or not 
 #'@export
 wait_worker <- function(path = NULL, shared_secret = "default", terminate = TRUE, is_start = FALSE, is_clear_job_finish = FALSE, ping.time.gap = 10L) {
+  stopifnot(require(tools))
   if (is.null(path)) stop("\"path\" is required")
   if (is.null(dict$context)) dict$context = init.context()
   if (is.null(dict$socket[[path]])) {
@@ -267,14 +268,10 @@ wait_worker <- function(path = NULL, shared_secret = "default", terminate = TRUE
   }
   if (is_start) stopifnot(job_processing_len() == 0)
   if (is_clear_job_finish) clear_job_finish()
-  ping.stdout <- tempfile()
-  system2("Rscript", args = c(system.file("ping.R", package="RzmqJobQueue"), sub(pattern="*", replacement="localhost", x=path, fixed=TRUE), shared_secret, as.character(ping.time.gap)), wait=FALSE, stdout = ping.stdout)
-  while(!file.exists(ping.stdout)) next
-  while(file.info(ping.stdout)$size == 0) next
-  ping.pid <- as.integer(readLines(ping.stdout))
-  stopifnot(length(ping.pid) > 0)
-  stopifnot(ping.pid > 0)
-  on.exit(pskill(ping.pid), add=TRUE)
+  child.pid <- c()
+  child.pid <- c(child.pid, open_subprocess("ping.R", sub("*", "localhost", x="tcp://*:12345", fixed=TRUE), shared_secret, "10"))
+  print(sprintf("ping process: %d \n", child.pid))
+  on.exit(pskill(child.pid), add=TRUE)
   job.total.count <- job_queue_len()
 #   pb <- txtProgressBar(max = job.total.count)
   while(job_queue_len() + job_processing_len() > 0) {

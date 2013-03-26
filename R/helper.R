@@ -40,6 +40,8 @@ commit_job <- function(job.list, is.processbar = TRUE) {
 #'@export
 zmqSapply <- function(
   path, X, FUN, 
+  num_worker = parallel::detectCores(),
+  shared_secret = "default", 
   redis.host = "localhost", redis.port = 6379, redis.timeout = 2147483647L, 
   redis.db.index = 1L, redis.flush = TRUE)  
 {
@@ -50,6 +52,15 @@ zmqSapply <- function(
     stop("Hash of jobs are the same. There is a collision of \"fun\" and \"argv\"!")
   }
   commit_job(job.list)
+  worker.pid <- vector("integer", length=num_worker)
+  for(i in 1:num_worker) {
+    worker.pid[i] <- open_subprocess(script.name="do_job.R", sub("*", "localhost", path, fixed=TRUE), shared_secret)
+  }
+  on.exit({
+    for(i in 1:num_worker) {
+      pskill(worker.pid[i])
+    }
+  }, add = TRUE)
   wait_worker(path, is_start=TRUE, is_clear_job_finish=TRUE, terminate=FALSE)
   value.base64 <- rredis:::redisLRange("job.finish", 0, rredis:::redisLLen("job.finish") - 1)
   value <- tryCatch({ 

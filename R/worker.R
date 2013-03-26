@@ -74,6 +74,7 @@ do_job <- function(path = NULL, shared_secret = "default") {
   }
   log4r:::debug(dict$logger, sprintf("[id: %s] receiving job(hash:%s) from %s", dict$worker.id, job["hash"], path))
   log4r:::debug(dict$logger, paste(capture.output(print(job)), collapse="\n"))
+  cat(sprintf("job type: %s\n", job["type"]))
   switch(
     job["type"],
     "terminate" = {
@@ -86,9 +87,9 @@ do_job <- function(path = NULL, shared_secret = "default") {
       return(NULL)
     })
   tryCatch({
-    do.call(job["fun"], job["argv"])
+    job["result"] <- list(do.call(job["fun"], job["argv"]))
     log4r:::debug(dict$logger, sprintf("[id: %s] sending finish signal of job(hash:%s) to %s", dict$worker.id, job["hash"], path))
-    send.socket(dict$socket[[path]], data=list(request="finish job", worker.id=dict$worker.id, job.hash = job["hash"], shared_secret = shared_secret))
+    send.socket(dict$socket[[path]], data=list(request="finish job", worker.id=dict$worker.id, job.hash = job["hash"], job.result = job["result"], shared_secret = shared_secret))
     res <- receive.socket(dict$socket[[path]])
     info(dict$logger, sprintf("[id: %s] finish job(hash:%s)", dict$worker.id, job["hash"]))
   }, error = function(e) {

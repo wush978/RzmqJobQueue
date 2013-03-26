@@ -227,7 +227,7 @@ pop_job_finish <- function() {
 #'
 #'@export
 clear_job_queue <- function() {
-  redisDelete("job.queue")
+  suppressWarnings(redisDelete("job.queue"))
 }
 
 #'@title clear_job_processing
@@ -236,7 +236,7 @@ clear_job_queue <- function() {
 #'
 #'@export
 clear_job_processing <- function() {
-  redisDelete("job.processing")
+  suppressWarnings(redisDelete("job.processing"))
 }
 
 #'@title clear_job_finish
@@ -245,7 +245,7 @@ clear_job_processing <- function() {
 #'
 #'@export
 clear_job_finish <- function() {
-  redisDelete("job.finish")
+  suppressWarnings(redisDelete("job.finish"))
 }
 
 #'@title wait_worker

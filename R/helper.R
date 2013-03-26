@@ -41,6 +41,7 @@ commit_job <- function(job.list, is.processbar = TRUE) {
 #'@export
 zmqSapply <- function(
   path, X, FUN, 
+  argv.template = list(),
   num_worker = parallel::detectCores(),
   shared_secret = "default", 
   redis.host = "localhost", redis.port = 6379, redis.timeout = 2147483647L, 
@@ -49,7 +50,7 @@ zmqSapply <- function(
   dict$socket <- list()
   gc()
   init_server(redis.host, redis.port, redis.timeout, redis.db.index, redis.flush)
-  job.list <- gen_job_set(fun=FUN, argv.enumerate=list(n = X))
+  job.list <- gen_job_set(fun=FUN, argv.enumerate=list(n = X), argv.template=argv.template)
   job.list.hash <- sapply(job.list, function(a) a["hash"])
   if (length(job.list.hash) != length(unique(job.list.hash))) {
     stop("Hash of jobs are the same. There is a collision of \"fun\" and \"argv\"!")

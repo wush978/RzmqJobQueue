@@ -8,6 +8,7 @@ Maintainer: Wush Wu <wush978@gmail.com>
 Description: A Job Queue based on Rzmq
 License: GPL
 Depends:
+    R (>= 2.15),
     methods,
     log4r,
     rzmq (>= 0.6.1),
@@ -24,3 +25,5 @@ Collate:
     'utility.R'
     'worker.R'
     'helper.R'
+    'register.R'
+    'subprocess.R'

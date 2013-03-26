@@ -28,7 +28,8 @@ commit_job <- function(job.list, is.processbar = TRUE) {
   stopifnot(all(sapply(job.list, class) == "job"))
   if (is.processbar) {
     i <- 0
-    pb <- txtProgressBar(max = length(job.list))
+    cat("Submitting jobs...\n")
+    pb <- txtProgressBar(max = length(job.list), style=3)
   }
   for(job in job.list) {
     push_job_queue(job)
@@ -45,6 +46,8 @@ zmqSapply <- function(
   redis.host = "localhost", redis.port = 6379, redis.timeout = 2147483647L, 
   redis.db.index = 1L, redis.flush = TRUE)  
 {
+  dict$socket <- list()
+  gc()
   init_server(redis.host, redis.port, redis.timeout, redis.db.index, redis.flush)
   job.list <- gen_job_set(fun=FUN, argv.enumerate=list(n = X))
   job.list.hash <- sapply(job.list, function(a) a["hash"])

@@ -98,10 +98,10 @@ do_job <- function(path = NULL, shared_secret = "default") {
 }
 
 #'@export
-tick <- function(path = NULL, shared_secret = "default", time_gap = 1L) {
+ping <- function(path = NULL, shared_secret = "default", time_gap = 1L) {
   init_connection(path)
-  send_server(path, shared_secret, "tick")
-  log4r:::debug(dict$logger, sprintf("[id: %s] tick (%s)", dict$worker.id, path))
+  send_server(path, shared_secret, "ping")
+  log4r:::debug(dict$logger, sprintf("[id: %s] ping (%s)", dict$worker.id, path))
   receive.socket(dict$socket[[path]])
   Sys.sleep(time_gap)
 }

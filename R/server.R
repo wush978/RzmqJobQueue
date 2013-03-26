@@ -285,7 +285,7 @@ wait_worker <- function(path = NULL, shared_secret = "default", terminate = TRUE
       worker.list <- sapply(job.processing.list, function(job) job["worker.id"])
       error.index <- which(worker$worker.id == worker.list)
       stopifnot(length(error.index) < 2)
-      if (error.index == 1) {
+      if (length(error.index) == 1) {
         error.job.hash <- names(worker.list)[error.index]
         job <- pop_job_processing(error.job.hash)
         push_job_error(job)

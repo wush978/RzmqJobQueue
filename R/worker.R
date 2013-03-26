@@ -99,9 +99,12 @@ do_job <- function(path = NULL, shared_secret = "default") {
 
 #'@export
 ping <- function(path = NULL, shared_secret = "default", time_gap = 1L) {
+  print(path)
+  print(shared_secret)
+  print(time_gap)
   init_connection(path)
   send_server(path, shared_secret, "ping")
-  log4r:::debug(dict$logger, sprintf("[id: %s] ping (%s)", dict$worker.id, path))
+#  log4r:::info(dict$logger, sprintf("[id: %s] ping (%s)", dict$worker.id, path))
   receive.socket(dict$socket[[path]])
   Sys.sleep(time_gap)
 }

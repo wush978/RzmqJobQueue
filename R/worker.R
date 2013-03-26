@@ -79,11 +79,13 @@ do_job <- function(path = NULL, shared_secret = "default") {
     job["type"],
     "terminate" = {
       info(dict$logger, sprintf("[id: %s] terminating", dict$worker.id))
+      do.call(job["fun"], job["argv"])
       stop("terminate")
     },
     "empty" = {
       log4r:::debug(dict$logger, sprintf("[id: %s] job queue is empty", dict$worker.id))
       do.call(job["fun"], job["argv"])
+      dict$socket[[path]] <- NULL
       return(NULL)
     })
   tryCatch({

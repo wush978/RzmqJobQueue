@@ -266,7 +266,7 @@ clear_job_finish <- function() {
 #'
 #'@param path string, ex: "tcp://*:12345"
 #'@param shared_secret string, a secret shares with workers
-#'@param terminate unused
+#'@param terminate logical, whether terminate worker after the job-queue is cleared
 #'@param is_start logical, check if the hash value of job under execution is empty or not
 #'@param is_clear_job_finish logical, whether clear the list of finished job or not 
 #'@export
@@ -292,7 +292,7 @@ wait_worker <- function(path = NULL, shared_secret = "default", terminate = TRUE
       worker$request,
       "init" = init_job(dict$socket[[path]], worker),
       "finish job" = finish_job(dict$socket[[path]], worker),
-      "ask job" = ask_job(dict$socket[[path]], worker)
+      "ask job" = ask_job(dict$socket[[path]], worker, terminate)
       )
 #     setTxtProgressBar(pb, length(dict$job.finish))
     if (length(dict$job.finish) == job.total.count) {
@@ -329,11 +329,15 @@ finish_job <- function(socket, worker) {
 }
 
 empty_job <- new("job", "empty", Sys.sleep, list(time = 10))
+terminate_job <- new("job", "terminate", fun = Sys.sleep, list(time = 1))
 
-ask_job <- function(socket, worker) {
+ask_job <- function(socket, worker, terminate) {
   if (job_queue_len() == 0) {
     info(dict$logger, sprintf("job queue is empty"))
-    send.socket(socket, data=empty_job)
+    if (terminate) {
+      info(dict$logger, sprintf("terminating the worker %s", worker$worker.id))
+      send.socket(socket, data=terminate_job) 
+    } else send.socket(socket, data=empty_job)
     return(NULL)
   }
   job <- pop_job_queue()

@@ -14,7 +14,8 @@ Listen to a specific port for workers and assign the first job in job queue if t
   \item{shared_secret}{string, a secret shares with
   workers}
 
-  \item{terminate}{unused}
+  \item{terminate}{logical, whether terminate worker after
+  the job-queue is cleared}
 
   \item{is_start}{logical, check if the hash value of job
   under execution is empty or not}

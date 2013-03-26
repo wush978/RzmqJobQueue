@@ -16,7 +16,8 @@
   do the job} \item{\code{start.processing}:}{When the job
   is delivered to the worker}
   \item{\code{processing.time}:}{How much time to execute
-  the job} }
+  the job} \item{\code{result}:}{The returned object from
+  \code{fun}} }
 }
 \examples{
 ## Not run

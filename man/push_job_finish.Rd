@@ -4,7 +4,7 @@
 
 Add job to the list of finished job in redis}
 \usage{
-  push_job_finish(job, hash)
+  push_job_finish(job)
 }
 \arguments{
   \item{job}{an instance of 'job'}

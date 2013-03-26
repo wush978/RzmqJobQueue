@@ -6,7 +6,7 @@ Listen to a specific port for workers and assign the first job in job queue if t
 \usage{
   wait_worker(path = NULL, shared_secret = "default",
     terminate = TRUE, is_start = FALSE,
-    is_clear_job_finish = FALSE)
+    is_clear_job_finish = FALSE, ping.time.gap = 10L)
 }
 \arguments{
   \item{path}{string, ex: "tcp://*:12345"}

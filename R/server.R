@@ -258,7 +258,7 @@ clear_job_finish <- function() {
 #'@param is_start logical, check if the hash value of job under execution is empty or not
 #'@param is_clear_job_finish logical, whether clear the list of finished job or not 
 #'@export
-wait_worker <- function(path = NULL, shared_secret = "default", terminate = TRUE, is_start = FALSE, is_clear_job_finish = FALSE) {
+wait_worker <- function(path = NULL, shared_secret = "default", terminate = TRUE, is_start = FALSE, is_clear_job_finish = FALSE, ping.time.gap = 10L) {
   if (is.null(path)) stop("\"path\" is required")
   if (is.null(dict$context)) dict$context = init.context()
   if (is.null(dict$socket[[path]])) {
@@ -267,6 +267,11 @@ wait_worker <- function(path = NULL, shared_secret = "default", terminate = TRUE
   }
   if (is_start) stopifnot(job_processing_len() == 0)
   if (is_clear_job_finish) clear_job_finish()
+  ping.stdout <- tempfile()
+  system2("Rscript", args = c(system.file("ping.R", package="RzmqJobQueue"), path, shared_secret, as.character(ping.time.gap)), wait=FALSE, stdout = ping.stdout)
+  while(!file.exists(ping.stdout)) next
+  ping.pid <- as.integer(readLines(ping.stdout))
+  on.exit(pskill(ping.pid), add=TRUE)
   job.total.count <- job_queue_len()
 #   pb <- txtProgressBar(max = job.total.count)
   while(job_queue_len() + job_processing_len() > 0) {

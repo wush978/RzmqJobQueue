@@ -42,6 +42,8 @@ commit_job <- function(job.list, is.processbar = TRUE) {
 zmqSapply <- function(
   path, X, FUN, 
   argv.template = list(),
+  init_fun = function() {},
+  init_argv = list(),
   num_worker = parallel::detectCores(),
   shared_secret = "default", 
   redis.host = "localhost", redis.port = 6379, redis.timeout = 2147483647L, 
@@ -65,6 +67,7 @@ zmqSapply <- function(
       pskill(worker.pid[i])
     }
   }, add = TRUE)
+  set_init_job(new("job", fun = init_fun, argv = init_argv))
   wait_worker(path, is_start=TRUE, is_clear_job_finish=TRUE, terminate=FALSE)
   value.base64 <- rredis:::redisLRange("job.finish", 0, rredis:::redisLLen("job.finish") - 1)
   value <- tryCatch({ 

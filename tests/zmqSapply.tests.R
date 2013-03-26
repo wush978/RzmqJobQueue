@@ -4,3 +4,4 @@ zmqSapply("tcp://*:12345", as.list(1:10), function(n) {
   letters[1:n]
   })
 stopifnot(length(system("ps -ef | grep do_job.R", intern = TRUE)) == 2)
+stopifnot(length(system("ps -ef | grep ping.R", intern = TRUE)) == 2)

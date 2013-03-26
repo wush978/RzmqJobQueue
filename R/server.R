@@ -284,13 +284,14 @@ wait_worker <- function(path = NULL, shared_secret = "default", terminate = TRUE
       send.null.msg(dict$socket[[path]])
       next
     }
-    if (worker$request != "finish job" && worker$request != "ping") { # check if job error 
+    if (! worker$request %in% c("finish job", "ping")) { # check if job error 
       job.processing.list <- dump_jobs("job.processing")
       worker.list <- sapply(job.processing.list, function(job) job["worker.id"])
       error.index <- which(worker$worker.id == worker.list)
       stopifnot(length(error.index) < 2)
       if (length(error.index) == 1) {
         error.job.hash <- names(worker.list)[error.index]
+        cat(sprintf("Detect error occurred on worker: %s and hash: %s \n", worker$worker.id, error.job.hash))
         job <- pop_job_processing(error.job.hash)
         push_job_error(job)
       }
@@ -365,6 +366,5 @@ ask_job <- function(socket, worker, terminate) {
 }
 
 pong <- function(socket, worker) {
-  print("ping pong")
   send.socket(socket, data="pong")
 }

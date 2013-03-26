@@ -1,7 +1,7 @@
 dump_jobs <- function(key) {
   extractor <- switch(
     key,
-    "job.processing" = function(key) rredis:::redisHGetAll(key)
+    "job.processing" = function(key) rredis:::redisHGetAll(key),
     function(key) rredis:::redisLRange(key, 0, rredis:::redisLLen(key) - 1)
     )
   value.base64 <- extractor(key)
@@ -158,7 +158,10 @@ push_job_finish <- function(job) {
   redisLPush("job.finish", job)
 }
 
-# push_job_error <- function(job)
+push_job_error <- function(job) {
+  stopifnot(class(job) == "job")
+  redisLPush("job.error", job)
+}
 
 #'@title job_queue_len
 #'@return int the number of jobs in job queue
@@ -273,6 +276,11 @@ wait_worker <- function(path = NULL, shared_secret = "default", terminate = TRUE
       send.null.msg(dict$socket[[path]])
       next
     }
+    if (worker$request != "finish job") { # check if job error 
+      job.processing.list <- dump_jobs("job.processing")
+      worker.list <- sapply(job.processing.list, function(job) job["worker.id"])
+      browser()
+    }
     switch(
       worker$request,
       "init" = init_job(dict$socket[[path]], worker),
@@ -310,7 +318,7 @@ finish_job <- function(socket, worker) {
   job.result <- worker$job.result
   job <- pop_job_processing(job.hash)
   job["result"] <- job.result
-  push_job_finish(job, job.hash)
+  push_job_finish(job)
   info(dict$logger, sprintf("sending null response to %s", worker$worker.id)) 
   send.socket(socket, NULL)
 }

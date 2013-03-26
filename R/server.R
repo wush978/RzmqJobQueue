@@ -270,7 +270,6 @@ wait_worker <- function(path = NULL, shared_secret = "default", terminate = TRUE
   if (is_clear_job_finish) clear_job_finish()
   child.pid <- c()
   child.pid <- c(child.pid, open_subprocess("ping.R", sub("*", "localhost", x="tcp://*:12345", fixed=TRUE), shared_secret, "10"))
-  print(sprintf("ping process: %d \n", child.pid))
   on.exit(pskill(child.pid), add=TRUE)
   job.total.count <- job_queue_len()
 #   pb <- txtProgressBar(max = job.total.count)

@@ -96,3 +96,12 @@ do_job <- function(path = NULL, shared_secret = "default") {
     error(dict$logger, sprintf("Job %s has following error message: %s", job["hash"], conditionMessage(e)))
   })
 }
+
+#'@export
+tick <- function(path = NULL, shared_secret = "default", time_gap = 1L) {
+  init_connection(path)
+  send_server(path, shared_secret, "tick")
+  log4r:::debug(dict$logger, sprintf("[id: %s] tick (%s)", dict$worker.id, path))
+  receive.socket(dict$socket[[path]])
+  Sys.sleep(time_gap)
+}

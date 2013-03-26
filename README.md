@@ -2,6 +2,10 @@
 
 RzmqJobQueue is a JobQueue system for R based on [redis](http://redis.io/) and [rzmq](http://cran.r-project.org/web/packages/rzmq/index.html)
 
+# Structure
+
+![](Structure.png)
+
 # Features
 
 - Job Queue

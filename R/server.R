@@ -270,7 +270,10 @@ wait_worker <- function(path = NULL, shared_secret = "default", terminate = TRUE
 #   pb <- txtProgressBar(max = job.total.count)
   while(job_queue_len() + job_processing_len() > 0) {
     try.socket <- try(worker <- receive.socket(dict$socket[[path]]))
-    if (class(try.socket) == "try-error") next
+    if (class(try.socket) == "try-error") {
+      Sys.sleep(0.1)
+      next
+    }
     info(dict$logger, sprintf("receive worker %s with request %s and shared secret %s", worker$worker.id, worker$request, worker$shared_secret))
     if (worker$shared_secret != shared_secret) {
       send.null.msg(dict$socket[[path]])

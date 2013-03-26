@@ -36,3 +36,39 @@ commit_job <- function(job.list, is.processbar = TRUE) {
   }
   if (is.processbar) close(pb)
 }
+
+#'@export
+zmqSapply <- function(
+  path, X, FUN, 
+  redis.host = "localhost", redis.port = 6379, redis.timeout = 2147483647L, 
+  redis.db.index = 1L, redis.flush = TRUE)  
+{
+  init_server(redis.host, redis.port, redis.timeout, redis.db.index, redis.flush)
+  job.list <- gen_job_set(fun=FUN, argv.enumerate=list(n = X))
+  job.list.hash <- sapply(job.list, function(a) a["hash"])
+  if (length(job.list.hash) != length(unique(job.list.hash))) {
+    stop("Hash of jobs are the same. There is a collision of \"fun\" and \"argv\"!")
+  }
+  commit_job(job.list)
+  wait_worker(path, is_start=TRUE, is_clear_job_finish=TRUE, terminate=FALSE)
+  value.base64 <- rredis:::redisLRange("job.finish", 0, rredis:::redisLLen("job.finish") - 1)
+  value <- tryCatch({ 
+    sapply(value.base64, function(base64) {
+      unserialize(.Call("base64__decode", base64), refhook=FALSE)
+    })},
+      error = function(e) {
+        greg.result <- gregexpr("^\\.onLoad failed in loadNamespace\\(\\) for \'(?<pkgname>\\w+)\',.*", text=conditionMessage(e), perl=TRUE)[[1]]
+        if (greg.result == -1) stop(conditionMessage(e))
+        pkgname <- substr(conditionMessage(e), attr(greg.result, "capture.start"), attr(greg.result, "capture.start") + attr(greg.result, "capture.length") - 1)
+        library(pkgname, character.only=TRUE)
+        value <- sapply(value.base64, function(base64) {
+          unserialize(.Call("base64__decode", base64), refhook=FALSE)
+        })
+        return(value)
+      })
+  result <- sapply(value, function(a) a["result"][[1]], simplify=FALSE)
+  names(result) <- sapply(value, function(a) a["hash"])
+  result <- result[job.list.hash]
+  names(result) <- NULL
+  return(result)
+}

@@ -152,11 +152,13 @@ push_job_processing <- function(job, hash) {
 #'
 #'@param job an instance of 'job'
 #'@export
-push_job_finish <- function(job, hash) {
+push_job_finish <- function(job) {
   stopifnot(class(job) == "job")
   job["processing.time"] <- as.numeric(Sys.time() - job["start.processing"])
   redisLPush("job.finish", job)
 }
+
+# push_job_error <- function(job)
 
 #'@title job_queue_len
 #'@return int the number of jobs in job queue

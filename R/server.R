@@ -158,6 +158,7 @@ push_job_finish <- function(job) {
   redisLPush("job.finish", job)
 }
 
+#'@export
 push_job_error <- function(job) {
   stopifnot(class(job) == "job")
   redisLPush("job.error", job)
@@ -282,7 +283,13 @@ wait_worker <- function(path = NULL, shared_secret = "default", terminate = TRUE
     if (worker$request != "finish job") { # check if job error 
       job.processing.list <- dump_jobs("job.processing")
       worker.list <- sapply(job.processing.list, function(job) job["worker.id"])
-      browser()
+      error.index <- which(worker$worker.id == worker.list)
+      stopifnot(length(error.index) < 2)
+      if (error.index == 1) {
+        error.job.hash <- names(worker.list)[error.index]
+        job <- pop_job_processing(error.job.hash)
+        push_job_error(job)
+      }
     }
     switch(
       worker$request,

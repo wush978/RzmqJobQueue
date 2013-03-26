@@ -1,3 +1,27 @@
+dump_jobs <- function(key) {
+  extractor <- switch(
+    key,
+    "job.processing" = function(key) rredis:::redisHGetAll(key)
+    function(key) rredis:::redisLRange(key, 0, rredis:::redisLLen(key) - 1)
+    )
+  value.base64 <- extractor(key)
+  value <- tryCatch({ 
+    sapply(value.base64, function(base64) {
+      unserialize(.Call("base64__decode", base64), refhook=FALSE)
+    })},
+    error = function(e) {
+      greg.result <- gregexpr("^\\.onLoad failed in loadNamespace\\(\\) for \'(?<pkgname>\\w+)\',.*", text=conditionMessage(e), perl=TRUE)[[1]]
+      if (greg.result == -1) stop(conditionMessage(e))
+      pkgname <- substr(conditionMessage(e), attr(greg.result, "capture.start"), attr(greg.result, "capture.start") + attr(greg.result, "capture.length") - 1)
+      library(pkgname, character.only=TRUE)
+      value <- sapply(value.base64, function(base64) {
+        unserialize(.Call("base64__decode", base64), refhook=FALSE)
+      })
+      return(value)
+    })
+  return(value)
+}
+
 #'@title query_job_queue
 #'
 #'Dump the jobs in the job queue for monitoring.
@@ -6,21 +30,7 @@
 #'@return data.frame includes the information of jobs. The 'title' attribute is used in shiny app
 #'@export
 query_job_queue <- function() {
-  value.base64 <- rredis:::redisLRange("job.queue", 0, rredis:::redisLLen("job.queue") - 1)
-  value <- tryCatch({ 
-    sapply(value.base64, function(base64) {
-      unserialize(.Call("base64__decode", base64), refhook=FALSE)
-    })},
-                    error = function(e) {
-                      greg.result <- gregexpr("^\\.onLoad failed in loadNamespace\\(\\) for \'(?<pkgname>\\w+)\',.*", text=conditionMessage(e), perl=TRUE)[[1]]
-                      if (greg.result == -1) stop(conditionMessage(e))
-                      pkgname <- substr(conditionMessage(e), attr(greg.result, "capture.start"), attr(greg.result, "capture.start") + attr(greg.result, "capture.length") - 1)
-                      library(pkgname, character.only=TRUE)
-                      value <- sapply(value.base64, function(base64) {
-                        unserialize(.Call("base64__decode", base64), refhook=FALSE)
-                      })
-                      return(value)
-                    })
+  value <- dump_jobs("job.queue")
   value.argv <- sapply(value, function(a) {
     argv <- a["argv"]
     retval <- capture.output(dump("argv", ""))
@@ -39,21 +49,7 @@ query_job_queue <- function() {
 #'@return data.frame includes the information of jobs. The 'title' attribute is used in shiny app
 #'@export
 query_job_processing <- function() {
-  value.base64 <- rredis:::redisHGetAll("job.processing")
-  value <- tryCatch({ 
-    sapply(value.base64, function(base64) {
-      unserialize(.Call("base64__decode", base64), refhook=FALSE)
-    })},
-    error = function(e) {
-      greg.result <- gregexpr("^\\.onLoad failed in loadNamespace\\(\\) for \'(?<pkgname>\\w+)\',.*", text=conditionMessage(e), perl=TRUE)[[1]]
-      if (greg.result == -1) stop(conditionMessage(e))
-      pkgname <- substr(conditionMessage(e), attr(greg.result, "capture.start"), attr(greg.result, "capture.start") + attr(greg.result, "capture.length") - 1)
-      library(pkgname, character.only=TRUE)
-      value <- sapply(value.base64, function(base64) {
-        unserialize(.Call("base64__decode", base64), refhook=FALSE)
-      })
-      return(value)
-    })
+  value <- dump_jobs("job.processing")
   get_column <- function(name) {
     force(name)
     return(sapply(value, function(a) a[name]))
@@ -78,21 +74,7 @@ query_job_processing <- function() {
 #'@return data.frame includes the information of jobs. The 'title' attribute is used in shiny app
 #'@export
 query_job_finish <- function() {
-  value.base64 <- rredis:::redisLRange("job.finish", 0, rredis:::redisLLen("job.finish") - 1)
-  value <- tryCatch({ 
-    sapply(value.base64, function(base64) {
-      unserialize(.Call("base64__decode", base64), refhook=FALSE)
-    })},
-                    error = function(e) {
-                      greg.result <- gregexpr("^\\.onLoad failed in loadNamespace\\(\\) for \'(?<pkgname>\\w+)\',.*", text=conditionMessage(e), perl=TRUE)[[1]]
-                      if (greg.result == -1) stop(conditionMessage(e))
-                      pkgname <- substr(conditionMessage(e), attr(greg.result, "capture.start"), attr(greg.result, "capture.start") + attr(greg.result, "capture.length") - 1)
-                      library(pkgname, character.only=TRUE)
-                      value <- sapply(value.base64, function(base64) {
-                        unserialize(.Call("base64__decode", base64), refhook=FALSE)
-                      })
-                      return(value)
-                    })
+  value <- dump_jobs("job.finish")
   get_column <- function(name) {
     force(name)
     return(sapply(value, function(a) a[name]))
@@ -282,7 +264,8 @@ wait_worker <- function(path = NULL, shared_secret = "default", terminate = TRUE
   job.total.count <- job_queue_len()
 #   pb <- txtProgressBar(max = job.total.count)
   while(job_queue_len() + job_processing_len() > 0) {
-    worker <- receive.socket(dict$socket[[path]])
+    try.socket <- try(worker <- receive.socket(dict$socket[[path]]))
+    if (class(try.socket) == "try-error") next
     info(dict$logger, sprintf("receive worker %s with request %s and shared secret %s", worker$worker.id, worker$request, worker$shared_secret))
     if (worker$shared_secret != shared_secret) {
       send.null.msg(dict$socket[[path]])
@@ -321,8 +304,10 @@ init_job <- function(socket, worker) {
 }
 
 finish_job <- function(socket, worker) {
-  job.hash <- worker$job.hash 
+  job.hash <- worker$job.hash
+  job.result <- worker$job.result
   job <- pop_job_processing(job.hash)
+  job["result"] <- job.result
   push_job_finish(job, job.hash)
   info(dict$logger, sprintf("sending null response to %s", worker$worker.id)) 
   send.socket(socket, NULL)

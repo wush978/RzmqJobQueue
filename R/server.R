@@ -280,7 +280,7 @@ wait_worker <- function(path = NULL, shared_secret = "default", terminate = TRUE
       send.null.msg(dict$socket[[path]])
       next
     }
-    if (worker$request != "finish job") { # check if job error 
+    if (worker$request != "finish job" && worker$request != "ping") { # check if job error 
       job.processing.list <- dump_jobs("job.processing")
       worker.list <- sapply(job.processing.list, function(job) job["worker.id"])
       error.index <- which(worker$worker.id == worker.list)
@@ -295,7 +295,8 @@ wait_worker <- function(path = NULL, shared_secret = "default", terminate = TRUE
       worker$request,
       "init" = init_job(dict$socket[[path]], worker),
       "finish job" = finish_job(dict$socket[[path]], worker),
-      "ask job" = ask_job(dict$socket[[path]], worker, terminate)
+      "ask job" = ask_job(dict$socket[[path]], worker, terminate),
+      "ping" = pong(dict$socket[[path]], worker)
       )
 #     setTxtProgressBar(pb, length(dict$job.finish))
     if (length(dict$job.finish) == job.total.count) {
@@ -357,4 +358,9 @@ ask_job <- function(socket, worker, terminate) {
   info(dict$logger, sprintf("send job %s to %s successfully", job["hash"], worker$worker.id)) 
   job["worker.id"] <- worker$worker.id
   push_job_processing(job, job.hash)
+}
+
+pong <- function(socket, worker) {
+  debug(dict$logger, "pong")
+  send.socket(socket, data="pong")
 }

@@ -52,7 +52,8 @@ zmqSapply <- function(
   dict$socket <- list()
   gc()
   init_server(redis.host, redis.port, redis.timeout, redis.db.index, redis.flush)
-  job.list <- gen_job_set(fun=FUN, argv.enumerate=list(n = X), argv.template=argv.template)
+  job.list <- gen_job_set(fun=FUN, argv.enumerate=X, argv.template=argv.template)
+  cat(sprintf("There are %d jobs to do...\n", length(job.list)))
   job.list.hash <- sapply(job.list, function(a) a["hash"])
   if (length(job.list.hash) != length(unique(job.list.hash))) {
     stop("Hash of jobs are the same. There is a collision of \"fun\" and \"argv\"!")

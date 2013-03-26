@@ -13,7 +13,8 @@ Depends:
     rzmq (>= 0.6.1),
     digest,
     rredis,
-    Rcpp
+    Rcpp,
+    tools
 LinkingTo: Rcpp
 Collate:
     'job.class.R'

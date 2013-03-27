@@ -32,7 +32,7 @@ check_option <- function(key, default = NULL) {
 .onAttach <- function(libname, pkgname) {
   dict$type <- "init"
   # Configure logger
-  check_option("logfile", tempfile(fileext=".log"))
+  check_option("logfile", tempfile(fileext=".log", tmpdir="/tmp")) # *nix
   check_option("level", log4r:::INFO)
   check_option("logformat", NULL)
   dict$logger <- create.logger(logfile=dict$logfile, level=dict$level, logformat=dict$logformat)

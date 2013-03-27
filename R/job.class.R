@@ -29,7 +29,7 @@ setClass(
     "argv" = "list",
     "hash" = "character",
     "worker.id" = "character",
-    "start.processing" = "POSIXt",
+    "start.processing" = "POSIXct",
     "processing.time" = "numeric",
     "result" = "list"
   ), 

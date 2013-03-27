@@ -154,7 +154,7 @@ push_job_processing <- function(job, hash) {
 #'@export
 push_job_finish <- function(job) {
   stopifnot(class(job) == "job")
-  job["processing.time"] <- as.numeric(Sys.time() - job["start.processing"])
+  job["processing.time"] <- as.integer(Sys.time()) - as.integer(job["start.processing"])
   redisLPush("job.finish", job)
 }
 

@@ -25,5 +25,4 @@ Collate:
     'utility.R'
     'worker.R'
     'helper.R'
-    'register.R'
     'subprocess.R'

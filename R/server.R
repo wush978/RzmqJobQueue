@@ -1,3 +1,13 @@
+#'@export
+get_name <- function(name) {
+  rredis::redisSet(".jobqueue", name)
+}
+
+#'@export
+get_name <- function() {
+  rredis::redisGet(".jobqueue")
+}
+
 dump_jobs <- function(key) {
   extractor <- switch(
     key,

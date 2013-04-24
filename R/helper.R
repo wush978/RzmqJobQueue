@@ -46,12 +46,14 @@ zmqSapply <- function(
   init_argv = list(),
   num_worker = parallel::detectCores(),
   shared_secret = "default", 
+  title = "No Title",
   redis.host = "localhost", redis.port = 6379, redis.timeout = 2147483647L, 
   redis.db.index = 1L, redis.flush = TRUE)  
 {
   dict$socket <- list()
   gc()
   init_server(redis.host, redis.port, redis.timeout, redis.db.index, redis.flush)
+  set_name(title)
   job.list <- gen_job_set(fun=FUN, argv.enumerate=X, argv.template=argv.template)
   cat(sprintf("There are %d jobs to do...\n", length(job.list)))
   job.list.hash <- sapply(job.list, function(a) a["hash"])

@@ -1,9 +1,20 @@
+#'@title Monitor
+#'
+#'@description Spawn a process to monitor the state of jobqueue(redis server) through Shiny
+#'
 #'@export
 monitor <- function() {
   stopifnot(require(shiny))
   runApp(system.file("shiny", package="RzmqJobQueue"))
 }
 
+#'@title Generate a set of jobs
+#'
+#'@description A helper function to generate jobs
+#'
+#'@param fun the function executed on worker
+#'@param argv.enumerate a list of varying arguments
+#'@param argv.template a list of static arguments
 #'@export
 gen_job_set <- function(fun = NULL, argv.enumerate = list(), argv.template = list()) {
   stopifnot(length(unique(sapply(argv.enumerate, length))) == 1)
@@ -22,6 +33,10 @@ gen_job_set <- function(fun = NULL, argv.enumerate = list(), argv.template = lis
   return(retval)
 }
 
+#'@title Commit a list of jobs to redis server
+#'
+#'@param job.list a list of jobs to be committed
+#'@param is.processbar logical, To determine whether a processbar is shown or not
 #'@export
 commit_job <- function(job.list, is.processbar = TRUE) {
   stopifnot(is.list(job.list))
@@ -38,6 +53,23 @@ commit_job <- function(job.list, is.processbar = TRUE) {
   if (is.processbar) close(pb)
 }
 
+#'@title zmqSapply
+#'
+#'@description A high level function to parallely execute jobs on multiple machines
+#'
+#'@param path character, indicate the ip and port of the \code{server}
+#'@param X a list of varying arguments. \code{X} is similar to the argument \code{X} of function \code{\link{sapply}}.
+#'@param FUN a function executed on workers. \code{FUN} is similar to the argument \code{FUN} of function \code{\link{sapply}}. 
+#'This argument is also passed to \code{\link{gen_job_set}} as arugment \code{argv.enumerate}.
+#'@param argv.template see \code{\link{gen_job_set}}
+#'@param init_fun a function which is executed once after the \code{worker} is registered.
+#'@param num_worker a integer to decide how many workers will be spawn on \code{server}. 
+#'Note that you may dynamically link and unlink workers to zmqJobQueue.
+#'@param shared_secret A tested feature to do a simple authorization between \code{server} and \code{worker}.
+#'@param title A title of this series of jobs. Displayed in the monitor.
+#'@param redis.host, redis.port, redis.timeout. The parameter of the backend redis server. See \code{\link{init_server}} and \code{\link{redisConnect}}.
+#'@param redis.db.index The index used for this series of jobs.
+#'@param redis.flush Whether to flush the content of redis server. See \code{\link{init_server}}
 #'@export
 zmqSapply <- function(
   path, X, FUN, 

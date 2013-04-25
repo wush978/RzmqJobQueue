@@ -1,5 +1,5 @@
 #'@export
-get_name <- function(name) {
+set_name <- function(name) {
   rredis::redisSet(".jobqueue", name)
 }
 

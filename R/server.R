@@ -101,6 +101,32 @@ query_job_finish <- function() {
   return(retval)
 }
 
+#'@title query_job_error
+#'
+#'Dump the jobs which occurred errors.
+#'This function won't affect the job queue in redis server.
+#'
+#'@return data.frame includes the information of jobs. The 'title' attribute is used in shiny app
+#'@export
+query_job_error <- function() {
+  value <- dump_jobs("job.error")
+  get_column <- function(name) {
+    force(name)
+    return(sapply(value, function(a) a[name]))
+  }
+  value.argv <- sapply(value, function(a) {
+    argv <- a["argv"]
+    retval <- capture.output(dump("argv", ""))
+    return(paste(retval, collapse=""))
+  })
+  retval <- data.frame(row.names = get_column("hash"), worker.id = get_column("worker.id"), start.processing = get_column("start.processing"), processing.time = get_column("processing.time"))
+  class(retval$start.processing) <- c("POSIXct", "POSIXt")
+  retval$start.processing <- format(retval$start.processing)
+  attr(retval, "title") <- value.argv
+  return(retval)
+}
+
+
 encode_base64 <- function(value) {
   .Call("base64__encode", serialize(value, connection=NULL))
 }

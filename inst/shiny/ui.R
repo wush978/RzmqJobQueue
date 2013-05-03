@@ -13,6 +13,7 @@ shinyUI(pageWithSidebar(
       tabPanel("Job Queue", value="job.queue", tableOutput("job.queue")),
       tabPanel("Job Processing", value="job.processing", tableOutput("job.processing")),
       tabPanel("Job Finished", value="job.finish", tableOutput("job.finish")),
+      tabPanel("Job Error", value="job.error", tableOutput("job.error")),
       id = "tabs"
       )
     )

@@ -32,6 +32,16 @@ shinyServer(function(input, output) {
     str <- paste("<a title='", attr(data, "title"), "'>", str, "</a>")
     return(str)
   })
+  output$job.error <- renderTable(reactive({
+    init_server(redis.flush=FALSE, redis.db.index=input$redis.index)
+    result <- query_job_error()
+    redisClose()
+    result
+  })(), sanitize.rownames.function = function(str) {
+    data <- get("data", parent.frame(2))
+    str <- paste("<a title='", attr(data, "title"), "'>", str, "</a>")
+    return(str)
+  })
   output$title <- renderUI({
     init_server(redis.flush=FALSE, redis.db.index=input$redis.index)
     name <- get_name()

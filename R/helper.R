@@ -94,14 +94,16 @@ zmqSapply <- function(
   }
   commit_job(job.list)
   worker.pid <- vector("integer", length=num_worker)
-  for(i in 1:num_worker) {
-    worker.pid[i] <- open_subprocess(script.name="do_job.R", sub("*", "localhost", path, fixed=TRUE), shared_secret)
-  }
-  on.exit({
+  if (num_worker > 0) {
     for(i in 1:num_worker) {
-      pskill(worker.pid[i])
+      worker.pid[i] <- open_subprocess(script.name="do_job.R", sub("*", "localhost", path, fixed=TRUE), shared_secret)
     }
-  }, add = TRUE)
+    on.exit({
+      for(i in 1:num_worker) {
+        pskill(worker.pid[i])
+      }
+    }, add = TRUE)
+  }
   set_init_job(new("job", fun = init_fun, argv = init_argv))
   wait_worker(path, is_start=TRUE, is_clear_job_finish=TRUE, terminate=FALSE)
   value.base64 <- rredis:::redisLRange("job.finish", 0, rredis:::redisLLen("job.finish") - 1)
